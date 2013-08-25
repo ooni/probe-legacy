@@ -383,6 +383,7 @@ class Report(object):
                 an instance of :class:ooni.tasks.ReportEntryManager
         """
         self.reporters = reporters
+        self.failedReporters = []
 
         self.done = defer.Deferred()
         self.reportEntryManager = reportEntryManager
@@ -480,6 +481,7 @@ class Report(object):
         if reporter in self.reporters:
             log.err("Failed to write to %s reporter, giving up..." % reporter)
             self.reporters.remove(reporter)
+            self.failedReporters.append(reporter)
         else:
             log.err("Failed to write to (already) removed reporter %s" % reporter)
 
@@ -501,6 +503,7 @@ class Report(object):
         #log.exception(failure)
         if reporter in self.reporters:
             self.reporters.remove(reporter)
+            self.failedReporters.append(reporter)
         # Don't forward the exception unless there are no more reporters
         if len(self.reporters) == 0:
             log.err("Removed last reporter %s" % reporter)
