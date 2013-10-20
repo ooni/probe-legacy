@@ -137,7 +137,7 @@ class HTTP11ClientProtocol(_newclient.HTTP11ClientProtocol):
                 log.err(err, 'Error writing request, but not in valid state '
                              'to finalize request: %s' % self._state)
 
-        _requestDeferred.addCallbacks(cbRequestWrotten, ebRequestWriting)
+        _requestDeferred.addCallbacks(cbRequestWrotten, errback=ebRequestWriting)
 
         return self._finishedRequest
 

@@ -39,6 +39,9 @@ def handleAllFailures(failure):
         AddressNotSupported,
         ConnectionError,
         NetworkUnreachable,
+        TorCircuitFailed,
+        TorStreamClosed,
+        TorStreamFailed,
         ConnectionLostEarly,
         ConnectionNotAllowed,
         NoAcceptableMethods,
@@ -204,6 +207,18 @@ class NoMoreReporters(Exception):
 
 
 class TorNotRunning(Exception):
+    pass
+
+
+class TorCircuitFailed(Exception):
+    pass
+
+
+class TorStreamClosed(Exception):
+    pass
+
+
+class TorStreamFailed(Exception):
     pass
 
 
