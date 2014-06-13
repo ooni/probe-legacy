@@ -1,3 +1,6 @@
+import itertools
+from copy import copy
+
 try:
     from urlparse import urljoin
 except ImportError:
@@ -5,13 +8,93 @@ except ImportError:
 
 from twisted.internet import defer
 from twisted.internet import reactor, protocol, endpoints
-from twisted.web import client, _newclient
+from twisted.web import client, _newclient, http_headers
 
 from ooni.utils import log
 
 from ooni.errors import MaximumRedirects
-from ooni.utils.trueheaders import TrueHeaders
 from ooni.utils.net import StringProducer, BodyReceiver
+
+
+class TrueOrderedHeaders(http_headers.Headers):
+    def __init__(self, rawHeaders=None):
+        self._rawHeaders = []
+        if isinstance(rawHeaders, list):
+            for name, value in rawHeaders:
+                self.addRawHeader(name, value)
+        elif isinstance(rawHeaders, dict):
+            for name, value in rawHeaders.iteritems():
+                self.addRawHeader(name, value)
+
+    def removeHeader(self, name):
+        for header in self._rawHeaders:
+            h_name, _ = header
+            if name.lower() == h_name.lower():
+                self._rawHeaders.remove(header)
+
+    def setRawHeaders(self, name, values):
+        if not isinstance(values, list):
+            raise TypeError("Header entry %r should be list or str but found "
+                            "instance of %r instead" % (name, type(values)))
+        self.removeHeader(name)
+        for value in values:
+            self._rawHeaders.append((name, values))
+
+    def addRawHeader(self, name, value):
+        self._rawHeaders.append((name, value))
+
+    def hasHeader(self, name):
+        for h_name, h_value in self._rawHeaders:
+            if h_name.lower() == name.lower():
+                return True
+        return False
+
+    def getAllRawHeaders(self):
+        for name, value in self._rawHeaders:
+            yield name, [value]
+
+    def getRawHeaders(self, name, default=None):
+        values = []
+        for h_name, h_value in self._rawHeaders:
+            if name.lower() == h_name.lower():
+                values.append(h_value)
+        if len(values) > 0:
+            return values
+        return default
+
+    def getDiff(self, headers, ignore=[]):
+        """
+
+        Args:
+
+            headers: a TrueHeaders object
+
+            ignore: specify a list of header fields to ignore
+
+        Returns:
+
+            a set containing the header names that are not present in
+            header_dict or not present in self.
+        """
+        diff = set()
+        field_names = set()
+
+        headers_a = copy(self)
+        headers_b = copy(headers)
+        for name_to_ignore in ignore:
+            headers_a.removeHeader(name_to_ignore)
+            headers_b.removeHeader(name_to_ignore)
+
+        for k, v in itertools.chain(headers_a.getAllRawHeaders(),
+                                    headers_b.getAllRawHeaders()):
+            field_names.add(k)
+
+        for name in field_names:
+            if self.getRawHeaders(name) and headers.getRawHeaders(name):
+                pass
+            else:
+                diff.add(name)
+        return diff
 
 
 class _HTTPClientParser(_newclient.HTTPClientParser):
@@ -25,8 +108,8 @@ class _HTTPClientParser(_newclient.HTTPClientParser):
         Use TrueHeaders instead of regular headers.
         """
         from twisted.web._newclient import STATUS
-        self.headers = TrueHeaders()
-        self.connHeaders = TrueHeaders()
+        self.headers = TrueOrderedHeaders()
+        self.connHeaders = TrueOrderedHeaders()
         self.state = STATUS
         self._partialHeader = None
 
@@ -138,6 +221,15 @@ class Response(object):
         self.body_deferred.addCallback(self._received_body)
         self.previous_response = None
 
+    def pprint(self):
+        ret = "Status: %s\n" % self.code
+        ret += "Headers:\n"
+        for name, value in self.headers.getAllRawHeaders():
+            ret += "%s: %s\n" % (name, '\n'.join(value))
+        ret += "Body:\n"
+        ret += self.body
+        return ret
+
     def _received_body(self, body_data):
         self.body = body_data
         return self
@@ -179,11 +271,11 @@ class Request(object):
         pass
 
     def _create_request(self, method, parsed_uri, headers, body):
-        headers = TrueHeaders(headers)
+        headers = TrueOrderedHeaders(headers)
         if not headers.hasHeader('host'):
             headers = headers.copy()
             headers.addRawHeader(
-                'host', self._compute_host_value(parsed_uri)
+                'Host', self._compute_host_value(parsed_uri)
             )
 
         bodyProducer = None
@@ -191,14 +283,22 @@ class Request(object):
             bodyProducer = StringProducer(body)
 
         return _newclient.Request._construct(
-            method, parsed_uri.originForm,  headers, bodyProducer, parsed_uri,
+            method, parsed_uri.originForm, headers, bodyProducer, parsed_uri
         )
 
     def connect(self, parsed_uri):
         factory = _HTTPClientFactory()
-        endpoint = endpoints.TCP4ClientEndpoint(self._reactor,
-                                                parsed_uri.host,
-                                                parsed_uri.port)
+        host = parsed_uri.host
+        port = parsed_uri.port
+
+        if parsed_uri.scheme == "http":
+            endpoint = endpoints.TCP4ClientEndpoint(self._reactor, host, port)
+
+        elif parsed_uri.scheme == "https":
+            tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(host, port)
+            endpoint = endpoints.SSL4ClientEndpoint(self._reactor, host, port,
+                                                    tlsPolicy)
+
         return endpoint.connect(factory)
 
     def _handle_response(self, response, request, body_receiver, ignore_body,
@@ -221,7 +321,7 @@ class Request(object):
                 raise MaximumRedirects()
             new_location = response.headers.getRawHeaders('location')[0]
             new_uri = urljoin(uri, new_location)
-            return self.execute(method, new_uri, headers, body, body_receiver,
+            return self.request(method, new_uri, headers, body, body_receiver,
                                 ignore_body, previous_response=response,
                                 follow_redirects=True,
                                 redirect_count=redirect_count+1)
@@ -231,7 +331,7 @@ class Request(object):
         response.previous_response = previous_response
         return response
 
-    def execute(self, method, uri, headers, body=None,
+    def request(self, method, uri, headers, body=None,
                 body_receiver=None, ignore_body=False,
                 follow_redirects=False, previous_response=None,
                 redirect_count=0):
@@ -264,13 +364,13 @@ class Request(object):
         return d
 
     def get(self, *args, **kw):
-        return self.execute("GET", *args, **kw)
+        return self.request("GET", *args, **kw)
 
     def put(self, *args, **kw):
-        return self.execute("PUT", *args, **kw)
+        return self.request("PUT", *args, **kw)
 
     def post(self, *args, **kw):
-        return self.execute("POST", *args, **kw)
+        return self.request("POST", *args, **kw)
 
     def delete(self, *args, **kw):
-        return self.execute("DELETE", *args, **kw)
+        return self.request("DELETE", *args, **kw)
