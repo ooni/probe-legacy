@@ -18,7 +18,8 @@ class TestNetworkHTTP(unittest.TestCase, FakeReactorAndConnectMixin):
         print response.headers
         print response.body
         print response.code
-        print list(response.responseChain())
+        for r in response.responseChain():
+            print r.pprint()
 
     def test_get_headers(self):
         pass

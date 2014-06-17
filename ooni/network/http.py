@@ -286,19 +286,40 @@ class Request(object):
             method, parsed_uri.originForm, headers, bodyProducer, parsed_uri
         )
 
-    def connect(self, parsed_uri):
+    def _getProxyEndpoint(self, parsed_uri, proxy):
+        from txsocksx.client import SOCKS5ClientEndpoint
+        from txsocksx.tls import TLSWrapClientEndpoint
+        proxy_host, proxy_port = proxy
+        proxy_endpoint = endpoints.TCP4ClientEndpoint(self._reactor,
+                                                      proxy_host,
+                                                      proxy_port)
+        endpoint = SOCKS5ClientEndpoint(parsed_uri.host,
+                                        parsed_uri.port,
+                                        proxy_endpoint)
+        if parsed_uri.scheme == 'https':
+            tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(
+                parsed_uri.host, parsed_uri.port)
+            endpoint = TLSWrapClientEndpoint(tlsPolicy, endpoint)
+        return endpoint
+
+    def connect(self, parsed_uri, proxy):
         factory = _HTTPClientFactory()
-        host = parsed_uri.host
-        port = parsed_uri.port
-
-        if parsed_uri.scheme == "http":
-            endpoint = endpoints.TCP4ClientEndpoint(self._reactor, host, port)
-
+        if parsed_uri.scheme not in ('http', 'https'):
+            raise client.SchemeNotSupported('unsupported scheme',
+                                            parsed_uri.scheme)
+        if proxy:
+            endpoint = self._getProxyEndpoint(parsed_uri, proxy)
+        elif parsed_uri.scheme == "http":
+            endpoint = endpoints.TCP4ClientEndpoint(self._reactor,
+                                                    parsed_uri.host,
+                                                    parsed_uri.port)
         elif parsed_uri.scheme == "https":
-            tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(host, port)
-            endpoint = endpoints.SSL4ClientEndpoint(self._reactor, host, port,
+            tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(
+                parsed_uri.host, parsed_uri.port)
+            endpoint = endpoints.SSL4ClientEndpoint(self._reactor,
+                                                    parsed_uri.host,
+                                                    parsed_uri.port,
                                                     tlsPolicy)
-
         return endpoint.connect(factory)
 
     def _handle_response(self, response, request, body_receiver, ignore_body,
@@ -315,7 +336,8 @@ class Request(object):
             return r.body_deferred
 
     def _handle_redirect(self, response, method, uri, headers, body,
-                         body_receiver, ignore_body, redirect_count):
+                         body_receiver, ignore_body, redirect_count,
+                         proxy):
         if response.code in self._redirect_codes:
             if redirect_count >= self._maximum_redirects:
                 raise MaximumRedirects()
@@ -324,7 +346,8 @@ class Request(object):
             return self.request(method, new_uri, headers, body, body_receiver,
                                 ignore_body, previous_response=response,
                                 follow_redirects=True,
-                                redirect_count=redirect_count+1)
+                                redirect_count=redirect_count+1,
+                                proxy=proxy)
         return response
 
     def _set_previous_response(self, response, previous_response):
@@ -334,12 +357,12 @@ class Request(object):
     def request(self, method, uri, headers, body=None,
                 body_receiver=None, ignore_body=False,
                 follow_redirects=False, previous_response=None,
-                redirect_count=0):
+                redirect_count=0, proxy=None):
         d = defer.Deferred()
 
         parsed_uri = client._URI.fromBytes(uri)
 
-        ed = self.connect(parsed_uri)
+        ed = self.connect(parsed_uri, proxy)
 
         request = self._create_request(method, parsed_uri, headers, body)
 
@@ -359,7 +382,7 @@ class Request(object):
 
         if follow_redirects:
             d.addCallback(self._handle_redirect, method, uri, headers, body,
-                          body_receiver, ignore_body, redirect_count)
+                          body_receiver, ignore_body, redirect_count, proxy)
 
         return d
 

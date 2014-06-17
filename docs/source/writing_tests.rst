@@ -347,8 +347,13 @@ response body (based on :mod:`nettests.examples.example_httpt`):
       inputFile = ['url file', 'f', None,
               'List of URLS to perform GET requests to']
       requiredOptions = ['url file']
-  
+      
       def test_http(self):
+          req = self.request.get(url, headers={"Some-Header": "Some Value", 
+                                               "Other-Header": "Other Value"
+                                 )
+          headers = yield req.headers
+          body = yield req.body
           if self.input:
               url = self.input
               return self.doRequest(url)
