@@ -21,6 +21,19 @@ class TestNetworkHTTP(unittest.TestCase, FakeReactorAndConnectMixin):
         for r in response.responseChain():
             print r.pprint()
 
+    @defer.inlineCallbacks
+    def test_get_request_proxy(self):
+        request = http.Request()
+        response = yield request.get('http://httpbin.org/redirect/2',
+                                     headers={'Some-Header': ['Value']},
+                                     follow_redirects=True,
+                                     proxy=('127.0.0.1', 9050))
+        print response.headers
+        print response.body
+        print response.code
+        for r in response.responseChain():
+            print r.pprint()
+
     def test_get_headers(self):
         pass
 
