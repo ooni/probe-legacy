@@ -6,6 +6,9 @@ try:
 except ImportError:
     from urllib.parse import urljoin
 
+from twisted.names import dns
+from twisted.names.client import Resolver, getResolver
+
 from twisted.internet import defer
 from twisted.internet import reactor, protocol, endpoints
 from twisted.web import client, _newclient, http_headers
@@ -208,7 +211,7 @@ class _HTTPClientFactory(protocol.Factory):
 
 
 class Response(object):
-    def __init__(self, response, request):
+    def __init__(self, response, request, dns_resolutions):
         self.headers = response.headers
         self.code = response.code
         self.version = response.version
@@ -216,6 +219,7 @@ class Response(object):
         self.headers = response.headers
         self.request = request
         self.body = None
+        self.dns_resolutions = dns_resolutions
 
         self.body_deferred = defer.Deferred()
         self.body_deferred.addCallback(self._received_body)
@@ -226,8 +230,14 @@ class Response(object):
         ret += "Headers:\n"
         for name, value in self.headers.getAllRawHeaders():
             ret += "%s: %s\n" % (name, '\n'.join(value))
+        if self.dns_resolutions:
+            ret += "DNS Resolutions:\n"
+            ret += '\n'.join(x.payload.dottedQuad()
+                             for x in self.dns_resolutions[0])
+        ret += "\n"
         ret += "Body:\n"
         ret += self.body
+        ret += "\n"
         return ret
 
     def _received_body(self, body_data):
@@ -250,11 +260,14 @@ class Response(object):
 class Request(object):
     _maximum_redirects = 4
     _redirect_codes = [301, 302, 303, 307]
+    _query_timeout = [3, 0]
 
-    def __init__(self, reactor=reactor, agent=None):
+    def __init__(self, reactor=reactor, agent=None, dns_resolver=None):
         self.agent = agent
         self._reactor = reactor
-        if not self.agent:
+        self.dns_resolver = dns_resolver
+        self.dns_resolutions = {}
+        if not agent:
             self.agent = client.Agent(reactor)
 
     def _compute_host_value(self, parsed_uri):
@@ -266,9 +279,6 @@ class Request(object):
                 (('http', 80), ('https', 443)):
             return parsed_uri.host
         return '%s:%d' % (parsed_uri.host, parsed_uri.port)
-
-    def resolve_host(self, host):
-        pass
 
     def _create_request(self, method, parsed_uri, headers, body):
         headers = TrueOrderedHeaders(headers)
@@ -302,6 +312,30 @@ class Request(object):
             endpoint = TLSWrapClientEndpoint(tlsPolicy, endpoint)
         return endpoint
 
+    def _getHTTPEndpoint(self, ip, port):
+        return endpoints.TCP4ClientEndpoint(self._reactor, ip, port)
+
+    def _getHTTPSEndpoint(self, ip, port, hostname):
+        tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(hostname, port)
+        return endpoints.SSL4ClientEndpoint(self._reactor, ip, port, tlsPolicy)
+
+    def _resolve(self, parsed_uri):
+        if parsed_uri.host in self.dns_resolutions:
+            return self.dns_resolutions[parsed_uri.host]
+        query = dns.Query(parsed_uri.host, dns.A, dns.IN)
+        if self.dns_resolver:
+            resolver = Resolver(servers=[self.dns_resolver])
+        else:
+            resolver = getResolver()
+        return resolver.query(query, timeout=self._query_timeout)
+
+    def _handle_resolution(self, result, host, port):
+        self.dns_resolutions[host] = result
+        for answer in result[0]:
+            if answer.type is dns.A:
+                ip = answer.payload.dottedQuad()
+        return ip
+
     def connect(self, parsed_uri, proxy):
         factory = _HTTPClientFactory()
         if parsed_uri.scheme not in ('http', 'https'):
@@ -309,23 +343,28 @@ class Request(object):
                                             parsed_uri.scheme)
         if proxy:
             endpoint = self._getProxyEndpoint(parsed_uri, proxy)
-        elif parsed_uri.scheme == "http":
-            endpoint = endpoints.TCP4ClientEndpoint(self._reactor,
-                                                    parsed_uri.host,
-                                                    parsed_uri.port)
-        elif parsed_uri.scheme == "https":
-            tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(
-                parsed_uri.host, parsed_uri.port)
-            endpoint = endpoints.SSL4ClientEndpoint(self._reactor,
-                                                    parsed_uri.host,
-                                                    parsed_uri.port,
-                                                    tlsPolicy)
-        return endpoint.connect(factory)
+            return endpoint.connect(factory)
 
-    def _handle_response(self, response, request, body_receiver, ignore_body,
-                         previous_response):
-        r = Response(response,
-                     request)
+        d = defer.maybeDeferred(self._resolve, parsed_uri)
+        d.addCallback(self._handle_resolution, parsed_uri.host,
+                      parsed_uri.port)
+
+        if parsed_uri.scheme == "http":
+            d.addCallback(self._getHTTPEndpoint, parsed_uri.port)
+        elif parsed_uri.scheme == "https":
+            d.addCallback(self._getHTTPSEndpoint, parsed_uri.port,
+                          parsed_uri.host)
+        d.addCallback(lambda endpoint: endpoint.connect(factory))
+        return d
+
+    def _handle_response(self, response, host, request, body_receiver,
+                         ignore_body, previous_response):
+        try:
+            dns_resolution = self.dns_resolutions[host]
+        except KeyError:
+            dns_resolution = []
+        r = Response(response, request, dns_resolution)
+
         if ignore_body:
             return r
         if body_receiver:
@@ -373,9 +412,14 @@ class Request(object):
             @d.addCallback
             def cb(result):
                 proto.transport.loseConnection()
+                return result
 
-        d.addCallback(self._handle_response, request, body_receiver,
-                      ignore_body, previous_response)
+        @ed.addErrback
+        def eb(error):
+            d.errback(error)
+
+        d.addCallback(self._handle_response, parsed_uri.host, request,
+                      body_receiver, ignore_body, previous_response)
 
         if previous_response:
             d.addCallback(self._set_previous_response, previous_response)

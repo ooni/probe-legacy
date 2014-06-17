@@ -10,6 +10,18 @@ class TestNetworkHTTP(unittest.TestCase, FakeReactorAndConnectMixin):
         self.request = http.Request()
 
     @defer.inlineCallbacks
+    def test_get_request_google(self):
+        request = http.Request()
+        response = yield request.get('http://google.com/',
+                                     headers={'Some-Header': ['Value']},
+                                     follow_redirects=True)
+        print response.headers
+        print response.body
+        print response.code
+        for r in response.responseChain():
+            print r.pprint()
+
+    @defer.inlineCallbacks
     def test_get_request(self):
         request = http.Request()
         response = yield request.get('http://httpbin.org/redirect/2',
