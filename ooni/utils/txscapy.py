@@ -37,10 +37,8 @@ def pcapdnet_installed():
     # expecting "dnet" so we try and import it under such name.
     try:
         import dumbnet
-
         sys.modules['dnet'] = dumbnet
-    except ImportError:
-        pass
+    except ImportError: pass
 
     try:
         conf.use_pcap = True
@@ -125,10 +123,14 @@ def getAddresses():
 
 def getDefaultIface():
     """ Return the default interface or raise IfaceError """
-    iface = conf.route.route('0.0.0.0', verbose=0)[0]
-    if len(iface) > 0:
-        return iface
-    raise IfaceError
+    #XXX: currently broken on OpenVZ environments, because
+    # the routing table does not contain a default route
+    # Workaround: Set the default interface in ooniprobe.conf
+    networks = getNetworksFromRoutes()
+    for net in networks:
+        if net.netmask == ipaddr.IPv4Address("0.0.0.0"):
+            return net.iface
+    raise IfaceError("Could not auto-detect default interface.")
 
 
 def hasRawSocketPermission():
