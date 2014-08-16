@@ -311,6 +311,10 @@ class IfaceError(Exception):
 class PermissionsError(SystemExit):
     """This test requires admin or root privileges to run. Exiting..."""
 
+
+class MaximumRedirects(Exception):
+    pass
+
 def get_error(error_key):
     if error_key == 'test-helpers-key-missing':
         return CouldNotFindTestHelper
