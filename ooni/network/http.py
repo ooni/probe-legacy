@@ -6,8 +6,11 @@ try:
 except ImportError:
     from urllib.parse import urljoin
 
+from zope.interface import implements
+
 from twisted.names import dns
 from twisted.names.client import Resolver, getResolver
+from twisted.web.iweb import IBodyProducer
 
 from twisted.internet import defer
 from twisted.internet import reactor, protocol, endpoints
@@ -16,8 +19,80 @@ from twisted.web import client, _newclient, http_headers
 from ooni.utils import log
 
 from ooni.errors import MaximumRedirects
-from ooni.utils.net import StringProducer, BodyReceiver
 
+# These user agents are taken from the "How Unique Is Your Web Browser?"
+# (https://panopticlick.eff.org/browser-uniqueness.pdf) paper as the browser user
+# agents with largest anonymity set.
+userAgents = ("Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7",
+    "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3 1 2 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Mobile/7D11",
+    "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 6.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)")
+
+class StringProducer(object):
+    implements(IBodyProducer)
+
+    def __init__(self, body):
+        self.body = body
+        self.length = len(body)
+
+    def startProducing(self, consumer):
+        consumer.write(self.body)
+        return defer.succeed(None)
+
+    def pauseProducing(self):
+        pass
+
+    def stopProducing(self):
+        pass
+
+class BodyReceiver(protocol.Protocol):
+    def __init__(self, finished, content_length=None, body_processor=None):
+        self.finished = finished
+        self.data = []
+        self.bytes_remaining = content_length
+        self.body_processor = body_processor
+
+    def dataReceived(self, b):
+        self.data.append(b)
+        if self.bytes_remaining:
+            if self.bytes_remaining == 0:
+                self.connectionLost(None)
+            else:
+                self.bytes_remaining -= len(b)
+
+    def connectionLost(self, reason):
+        try:
+            if self.body_processor:
+                self.data = self.body_processor(''.join(self.data))
+            self.finished.callback(''.join(self.data))
+        except Exception as exc:
+            self.finished.errback(exc)
+
+class Downloader(protocol.Protocol):
+    def __init__(self,  download_path,
+                 finished, content_length=None):
+        self.finished = finished
+        self.bytes_remaining = content_length
+        self.fp = open(download_path, 'w+')
+
+    def dataReceived(self, b):
+        self.fp.write(b)
+        if self.bytes_remaining:
+            if self.bytes_remaining == 0:
+                self.connectionLost(None)
+            else:
+                self.bytes_remaining -= len(b)
+
+    def connectionLost(self, reason):
+        self.fp.flush()
+        self.fp.close()
+        self.finished.callback(None)
 
 class TrueOrderedHeaders(http_headers.Headers):
     def __init__(self, rawHeaders=None):

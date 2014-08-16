@@ -10,7 +10,7 @@ from twisted.internet.endpoints import TCP4ClientEndpoint
 from ooni import errors as e
 from ooni.settings import config
 from ooni.utils import log
-from ooni.utils.net import BodyReceiver, StringProducer, Downloader
+from ooni.network.http import BodyReceiver, StringProducer, Downloader
 from ooni.utils.trueheaders import TrueHeadersSOCKS5Agent
 
 class Collector(object):

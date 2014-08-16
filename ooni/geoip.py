@@ -133,7 +133,7 @@ class HTTPGeoIPLookupper(object):
         return failure
 
     def lookup(self):
-        from ooni.utils.net import userAgents
+        from ooni.network.http import userAgents
 
         headers = {}
         headers['User-Agent'] = [random.choice(userAgents)]

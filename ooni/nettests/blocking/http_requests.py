@@ -7,7 +7,7 @@ import random
 from twisted.python import usage, failure
 
 from ooni.utils import log
-from ooni.utils.net import userAgents
+from ooni.network.http import userAgents
 from ooni.templates import httpt
 from ooni.errors import failureToString
 

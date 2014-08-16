@@ -30,8 +30,8 @@ except ImportError:
 from ooni import errors
 
 from ooni import otime
-from ooni.utils import pushFilenameStack, generate_filename
-from ooni.utils.net import BodyReceiver, StringProducer
+from ooni.utils import pushFilenameStack
+from ooni.network.http import BodyReceiver, StringProducer
 
 from ooni.settings import config
 

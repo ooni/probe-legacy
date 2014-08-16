@@ -170,11 +170,6 @@ class InvalidOONIBBouncerAddress(Exception):
 class AllReportersFailed(Exception):
     pass
 
-
-class GeoIPDataFilesNotFound(Exception):
-    pass
-
-
 class ReportNotCreated(Exception):
     pass
 
@@ -189,7 +184,6 @@ class TorStateNotFound(Exception):
 
 class TorControlPortNotFound(Exception):
     pass
-
 
 class InsufficientPrivileges(Exception):
     pass
@@ -305,6 +299,17 @@ class InvalidConfigFile(Exception):
 class ConfigFileIncoherent(Exception):
     pass
 
+
+class UnsupportedPlatform(Exception):
+    """Support for this platform is not currently available."""
+    pass
+
+class IfaceError(Exception):
+    """Could not find default network interface."""
+    pass
+
+class PermissionsError(SystemExit):
+    """This test requires admin or root privileges to run. Exiting..."""
 
 def get_error(error_key):
     if error_key == 'test-helpers-key-missing':

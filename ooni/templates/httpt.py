@@ -12,7 +12,7 @@ from ooni.nettest import NetTestCase
 from ooni.utils import log
 from ooni.settings import config
 
-from ooni.utils.net import BodyReceiver, StringProducer, userAgents
+from ooni.network.http import BodyReceiver, StringProducer, userAgents
 from ooni.utils.trueheaders import TrueHeaders
 from ooni.errors import handleAllFailures
 
