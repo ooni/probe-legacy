@@ -36,7 +36,7 @@ class UsageOptions(usage.Options):
         ['headers', 'h', None,
          'Specify a yaml formatted file from which to read '
          'the request headers to send']
-        ]
+    ]
 
 
 class HTTPHeaderFieldManipulation(httpt.HTTPTest):

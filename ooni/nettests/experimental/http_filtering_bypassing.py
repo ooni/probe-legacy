@@ -5,10 +5,12 @@ from ooni.utils import log
 from ooni.utils import randomStr, randomSTR
 from ooni.templates import tcpt
 
+
 class UsageOptions(usage.Options):
     optParameters = [['backend', 'b', '127.0.0.1',
-                        'The OONI backend that runs a TCP echo server'],
-                    ['backendport', 'p', 80, 'Specify the port that the TCP echo server is running (should only be set for debugging)']]
+                      'The OONI backend that runs a TCP echo server'],
+                     ['backendport', 'p', 80, 'Specify the port that the TCP echo server is running (should only be set for debugging)']]
+
 
 class HTTPFilteringBypass(tcpt.TCPTest):
     name = "HTTPFilteringBypass"
@@ -16,7 +18,7 @@ class HTTPFilteringBypass(tcpt.TCPTest):
     authors = "xx"
 
     inputFile = ['file', 'f', None,
-            'Specify a list of hostnames to use as inputs']
+                 'Specify a list of hostnames to use as inputs']
 
     usageOptions = UsageOptions
     requiredOptions = ['backend']
@@ -84,4 +86,3 @@ class HTTPFilteringBypass(tcpt.TCPTest):
         d = self.sendPayload(payload)
         d.addCallback(self.check_for_manipulation, payload)
         return d
-

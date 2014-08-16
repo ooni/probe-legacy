@@ -6,12 +6,15 @@ import time
 from twisted.python import usage
 from ooni.templates.scapyt import BaseScapyTest
 
+
 class UsageOptions(usage.Options):
     optParameters = [['dst', 'd', None, 'Specify the target address'],
                      ['port', 'p', None, 'Specify the target port']
-                    ]
+                     ]
+
 
 class ChinaTriggerTest(BaseScapyTest):
+
     """
     This test is a OONI based implementation of the C tool written
     by Philipp Winter to engage chinese probes in active scanning.
@@ -34,14 +37,14 @@ class ChinaTriggerTest(BaseScapyTest):
         ret = pkt[:121]
         for i in range(16):
             ret += random.choice(string.ascii_lowercase)
-        ret += pkt[121+16:]
+        ret += pkt[121 + 16:]
         return ret
 
     @staticmethod
     def set_random_time(pkt):
         ret = pkt[:11]
         ret += struct.pack('!I', int(time.time()))
-        ret += pkt[11+4:]
+        ret += pkt[11 + 4:]
         return ret
 
     @staticmethod
@@ -49,7 +52,7 @@ class ChinaTriggerTest(BaseScapyTest):
         ret = pkt[:15]
         for i in range(28):
             ret += chr(random.randint(0, 255))
-        ret += pkt[15+28:]
+        ret += pkt[15 + 28:]
         return ret
 
     @staticmethod
@@ -57,7 +60,7 @@ class ChinaTriggerTest(BaseScapyTest):
         """
         Slightly changed mutate function.
         """
-        ret = pkt[:idx-1]
+        ret = pkt[:idx - 1]
         mutation = chr(random.randint(0, 255))
         while mutation == pkt[idx]:
             mutation = chr(random.randint(0, 255))
@@ -100,9 +103,9 @@ class ChinaTriggerTest(BaseScapyTest):
               "\x00\x00"
 
         pkt = ChinaTriggerTest.set_all_random_fields(pkt)
-        pkts = [IP(dst=self.dst)/TCP(dport=self.port)/pkt]
+        pkts = [IP(dst=self.dst) / TCP(dport=self.port) / pkt]
         for x in range(len(pkt)):
-            mutation = IP(dst=self.dst)/TCP(dport=self.port)/ChinaTriggerTest.mutate(pkt, x)
+            mutation = IP(dst=self.dst) / TCP(dport=self.port) / \
+                ChinaTriggerTest.mutate(pkt, x)
             pkts.append(mutation)
         return self.sr(pkts, timeout=2)
-

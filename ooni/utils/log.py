@@ -39,6 +39,7 @@ def log_encode(logmsg):
 
 
 class LogWithNoPrefix(txlog.FileLogObserver):
+
     def emit(self, eventDict):
         text = txlog.textFromEventDict(eventDict)
         if text is None:
@@ -49,6 +50,7 @@ class LogWithNoPrefix(txlog.FileLogObserver):
 
 
 class OONILogger(object):
+
     def start(self, logfile=None, application_name="ooniprobe"):
         from ooni.settings import config
 

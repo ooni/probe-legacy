@@ -31,6 +31,7 @@ class UsageOptions(usage.Options):
 
 
 class ScriptProcessProtocol(protocol.ProcessProtocol):
+
     def __init__(self, test_case):
         self.test_case = test_case
         self.deferred = defer.Deferred()
@@ -50,7 +51,7 @@ class ScriptProcessProtocol(protocol.ProcessProtocol):
 
     def processEnded(self, status):
         rc = status.value.exitCode
-        log.debug('processEnded: %s, %s' % \
+        log.debug('processEnded: %s, %s' %
                   (rc, self.test_case.report['lua_output']))
         if rc == 0:
             self.deferred.callback(self)

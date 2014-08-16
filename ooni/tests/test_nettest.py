@@ -109,7 +109,6 @@ dummyArgsWithFile = ('--spam', 'notham', '--file', 'dummyInputFile.txt')
 dummyInputFile = 'dummyInputFile.txt'
 
 
-
 class TestNetTest(unittest.TestCase):
     timeout = 1
 

@@ -13,13 +13,15 @@ from ooni.utils import log
 from ooni.network.http import BodyReceiver, StringProducer, Downloader
 from ooni.utils.trueheaders import TrueHeadersSOCKS5Agent
 
+
 class Collector(object):
+
     def __init__(self, address):
         self.address = address
 
         self.nettest_policy = None
         self.input_policy = None
-    
+
     @defer.inlineCallbacks
     def loadPolicy(self):
         # XXX implement caching of policies
@@ -41,6 +43,7 @@ class Collector(object):
                 return True
         return False
 
+
 class OONIBClient(object):
     retries = 3
 
@@ -52,8 +55,8 @@ class OONIBClient(object):
         if self.address.startswith('httpo://'):
             address = self.address.replace('httpo://', 'http://')
             agent = TrueHeadersSOCKS5Agent(reactor,
-                proxyEndpoint=TCP4ClientEndpoint(reactor, '127.0.0.1',
-                    config.tor.socks_port))
+                                           proxyEndpoint=TCP4ClientEndpoint(reactor, '127.0.0.1',
+                                                                            config.tor.socks_port))
 
         elif self.address.startswith('https://'):
             log.err("HTTPS based bouncers are currently not supported.")
@@ -74,7 +77,8 @@ class OONIBClient(object):
             @d.addCallback
             def callback(response):
                 try:
-                    content_length = int(response.headers.getRawHeaders('content-length')[0])
+                    content_length = int(
+                        response.headers.getRawHeaders('content-length')[0])
                 except:
                     content_length = None
                 response.deliverBody(genReceiver(finished, content_length))
@@ -99,7 +103,7 @@ class OONIBClient(object):
         bodyProducer = None
         if query:
             bodyProducer = StringProducer(json.dumps(query))
-        
+
         def genReceiver(finished, content_length):
             def process_response(s):
                 # If empty string then don't parse it.
@@ -124,7 +128,7 @@ class OONIBClient(object):
             return Downloader(download_path, finished, content_length)
 
         return self._request('GET', urn, genReceiver)
-    
+
     def getNettestPolicy(self):
         pass
 
@@ -159,7 +163,11 @@ class OONIBClient(object):
         if input_file.fileCached:
             return defer.succeed(input_file)
         else:
-            d = self.download('/input/'+input_hash+'/file', input_file.cached_file)
+            d = self.download(
+                '/input/' +
+                input_hash +
+                '/file',
+                input_file.cached_file)
 
             @d.addCallback
             def cb(res):
@@ -210,7 +218,7 @@ class OONIBClient(object):
         if deck.fileCached:
             return defer.succeed(deck)
         else:
-            d = self.download('/deck/'+deck_hash+'/file', deck.cached_file)
+            d = self.download('/deck/' + deck_hash + '/file', deck.cached_file)
 
             @d.addCallback
             def cb(res):
@@ -229,7 +237,7 @@ class OONIBClient(object):
     def lookupTestCollector(self, test_name):
         try:
             test_collector = yield self.queryBackend('POST', '/bouncer',
-                    query={'test-collector': test_name})
+                                                     query={'test-collector': test_name})
         except Exception:
             raise e.CouldNotFindTestCollector
 
@@ -239,9 +247,9 @@ class OONIBClient(object):
     def lookupTestHelpers(self, test_helper_names):
         try:
 
-            test_helper = yield self.queryBackend('POST', '/bouncer', 
-                            query={'test-helpers': test_helper_names})
-        except Exception, exc:
+            test_helper = yield self.queryBackend('POST', '/bouncer',
+                                                  query={'test-helpers': test_helper_names})
+        except Exception as exc:
             log.exception(exc)
             raise e.CouldNotFindTestHelper
 

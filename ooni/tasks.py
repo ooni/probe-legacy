@@ -4,6 +4,7 @@ from ooni import errors as e
 from ooni.settings import config
 from twisted.internet import defer, reactor
 
+
 class BaseTask(object):
     _timer = None
 
@@ -60,6 +61,7 @@ class BaseTask(object):
         """
         pass
 
+
 class TaskWithTimeout(BaseTask):
     timeout = 30
     # So that we can test the callLater calls
@@ -87,7 +89,9 @@ class TaskWithTimeout(BaseTask):
         self._timer = self.clock.callLater(self.timeout, self._timedOut)
         return BaseTask.start(self)
 
+
 class Measurement(TaskWithTimeout):
+
     def __init__(self, test_instance, test_method, test_input):
         """
         test_class:

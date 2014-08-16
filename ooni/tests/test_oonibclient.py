@@ -17,6 +17,7 @@ deck_id = 'd4ae40ecfb3c1b943748cce503ab8233efce7823f3e391058fc0f87829c644ed'
 
 
 class TestOONIBClient(ConfigTestCase):
+
     def setUp(self):
         host = '127.0.0.1'
         port = 8889
@@ -34,7 +35,8 @@ class TestOONIBClient(ConfigTestCase):
             os.mkdir(os.path.join(data_dir, 'inputs'))
             os.mkdir(os.path.join(data_dir, 'decks'))
         except Exception as ex:
-            self.skipTest("OONIB must be listening on port 8888 to run this test (tor_hidden_service: false)")
+            self.skipTest(
+                "OONIB must be listening on port 8888 to run this test (tor_hidden_service: false)")
         self.oonibclient = OONIBClient('http://' + host + ':' + str(port))
 
     @defer.inlineCallbacks
@@ -93,13 +95,15 @@ class TestOONIBClient(ConfigTestCase):
         self.oonibclient.address = 'http://127.0.0.1:8888'
         required_helpers = [u'http-return-json-headers', u'dns']
         helpers = yield self.oonibclient.lookupTestHelpers(required_helpers)
-        self.assertEqual(set(helpers.keys()), set(required_helpers + [u'default']))
-        self.assertTrue(helpers['http-return-json-headers']['address'].startswith('http'))
+        self.assertEqual(
+            set(helpers.keys()), set(required_helpers + [u'default']))
+        self.assertTrue(
+            helpers['http-return-json-headers']['address'].startswith('http'))
         self.assertTrue(int(helpers['dns']['address'].split('.')[0]))
 
     @defer.inlineCallbacks
     def test_input_descriptor_not_found(self):
-        yield self.assertFailure(self.oonibclient.queryBackend('GET', '/input/' + 'a'*64), e.OONIBInputDescriptorNotFound)
+        yield self.assertFailure(self.oonibclient.queryBackend('GET', '/input/' + 'a' * 64), e.OONIBInputDescriptorNotFound)
 
     @defer.inlineCallbacks
     def test_http_errors(self):

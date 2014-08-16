@@ -17,13 +17,17 @@ try:
 except ImportError:
     try:
         import GeoIP as CGeoIP
+
         def GeoIP(database_path, *args, **kwargs):
             return CGeoIP.open(database_path, CGeoIP.GEOIP_STANDARD)
     except ImportError:
-        log.err("Unable to import pygeoip. We will not be able to run geo IP related measurements")
+        log.err(
+            "Unable to import pygeoip. We will not be able to run geo IP related measurements")
+
 
 class GeoIPDataFilesNotFound(Exception):
     pass
+
 
 def IPToLocation(ipaddr):
     from ooni.settings import config
@@ -47,7 +51,7 @@ def IPToLocation(ipaddr):
         city_dat = GeoIP(city_file)
         location['city'] = city_dat.record_by_addr(ipaddr)['city']
     except:
-         log.err("Could not find the city your IP is from. "
+        log.err("Could not find the city your IP is from. "
                 "Download the GeoLiteCity.dat file into the geoip_data_dir"
                 " or install geoip-database-contrib.")
     try:
@@ -59,6 +63,7 @@ def IPToLocation(ipaddr):
                 " or install geoip-database-contrib.")
 
     return location
+
 
 def database_version():
     from ooni.settings import config
@@ -143,6 +148,7 @@ class HTTPGeoIPLookupper(object):
         d.addErrback(self.failed)
         return d
 
+
 class UbuntuGeoIP(HTTPGeoIPLookupper):
     url = "http://geoip.ubuntu.com/lookup"
 
@@ -151,6 +157,7 @@ class UbuntuGeoIP(HTTPGeoIPLookupper):
         probe_ip = m.group(1)
         return probe_ip
 
+
 class TorProjectGeoIP(HTTPGeoIPLookupper):
     url = "https://check.torproject.org/"
 
@@ -158,6 +165,7 @@ class TorProjectGeoIP(HTTPGeoIPLookupper):
         regexp = "Your IP address appears to be:  <strong>((\d+\.)+(\d+))"
         probe_ip = re.search(regexp, response_body).group(1)
         return probe_ip
+
 
 class ProbeIP(object):
     strategy = None
@@ -207,7 +215,8 @@ class ProbeIP(object):
             self.resolveGeodata()
             defer.returnValue(self.address)
         except errors.InsufficientPrivileges:
-            log.debug("Cannot determine the probe IP address with a traceroute, becase of insufficient priviledges")
+            log.debug(
+                "Cannot determine the probe IP address with a traceroute, becase of insufficient priviledges")
         except:
             log.msg("Unable to lookup the probe IP via traceroute")
 
@@ -216,7 +225,7 @@ class ProbeIP(object):
             log.msg("Found your IP via a GeoIP service: %s" % self.address)
             self.resolveGeodata()
             defer.returnValue(self.address)
-        except Exception, e:
+        except Exception as e:
             log.msg("Unable to lookup the probe IP via GeoIPService")
             raise e
 
@@ -232,7 +241,7 @@ class ProbeIP(object):
                 self.address = yield s.lookup()
                 self.strategy = 'geo_ip_service-' + service_name
                 break
-            except Exception, e:
+            except Exception as e:
                 log.msg("Failed to lookup your IP via %s" % service_name)
 
         if not self.address:
@@ -257,6 +266,7 @@ class ProbeIP(object):
 
         if config.tor_state:
             d = config.tor_state.protocol.get_info("address")
+
             @d.addCallback
             def cb(result):
                 self.strategy = 'tor_get_info_address'

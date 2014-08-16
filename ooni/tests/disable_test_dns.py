@@ -12,6 +12,7 @@ from twisted.names.client import Resolver
 
 
 class DNSTest(unittest.TestCase):
+
     def test_a_lookup_ooni_query(self):
         def done_query(message, *arg):
             answer = message.answers[0]
@@ -22,4 +23,3 @@ class DNSTest(unittest.TestCase):
         d = resolver.queryUDP(dns_query)
         d.addCallback(done_query)
         return d
-

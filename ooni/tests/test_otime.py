@@ -6,6 +6,7 @@ test_date = datetime(2002, 6, 26, 22, 45, 49)
 
 
 class TestOtime(unittest.TestCase):
+
     def test_timestamp(self):
         self.assertEqual(otime.timestamp(test_date), "2002-06-26T224549Z")
 

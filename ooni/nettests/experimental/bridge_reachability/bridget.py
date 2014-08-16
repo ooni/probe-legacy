@@ -12,40 +12,46 @@
 # :licence: see included LICENSE
 # :version: 0.1.0-alpha
 
-from __future__           import with_statement
-from functools            import partial
-from random               import randint
+from __future__ import with_statement
+from functools import partial
+from random import randint
 
 import os
 import sys
 
-from twisted.python       import usage
-from twisted.internet     import defer, error, reactor
+from twisted.python import usage
+from twisted.internet import defer, error, reactor
 
-from ooni                 import nettest
+from ooni import nettest
 
-from ooni.utils           import log, date
-from ooni.utils.config    import ValueChecker
+from ooni.utils import log, date
+from ooni.utils.config import ValueChecker
 
-from ooni.utils.onion     import TxtorconImportError
-from ooni.utils.onion     import PTNoBridgesException, PTNotFoundException
+from ooni.utils.onion import TxtorconImportError
+from ooni.utils.onion import PTNoBridgesException, PTNotFoundException
 
 
 try:
-    from ooni.utils.onion     import parse_data_dir
+    from ooni.utils.onion import parse_data_dir
 except:
     log.msg("Please go to /ooni/lib and do 'make txtorcon' to run this test!")
+
 
 class MissingAssetException(Exception):
     pass
 
+
 class RandomPortException(Exception):
+
     """Raised when using a random port conflicts with configured ports."""
+
     def __init__(self):
         log.msg("Unable to use random and specific ports simultaneously")
         return sys.exit()
 
+
 class BridgetArgs(usage.Options):
+
     """Commandline options."""
     allowed = "Port to use for Tor's %s, must be between 1024 and 65535."
     sock_check = ValueChecker(allowed % "SocksPort").port_check
@@ -85,7 +91,9 @@ class BridgetArgs(usage.Options):
         if self['torpath']:
             ValueChecker.file_check(self['torpath'])
 
+
 class BridgetTest(nettest.NetTestCase):
+
     """
     XXX fill me in
 
@@ -105,10 +113,10 @@ class BridgetTest(nettest.NetTestCase):
     :ivar tor_binary:
         Path to the Tor binary to use, e.g. \'/usr/sbin/tor\'
     """
-    name    = "bridget"
-    author  = "Isis Lovecruft <isis@torproject.org>"
+    name = "bridget"
+    author = "Isis Lovecruft <isis@torproject.org>"
     version = "0.1"
-    description   = "Use a Tor process to test connecting to bridges or relays"
+    description = "Use a Tor process to test connecting to bridges or relays"
     usageOptions = BridgetArgs
 
     def setUp(self):
@@ -117,11 +125,11 @@ class BridgetTest(nettest.NetTestCase):
         running, so we need to deal with most of the TorConfig() only once,
         before the experiment runs.
         """
-        self.socks_port      = 9049
-        self.control_port    = 9052
+        self.socks_port = 9049
+        self.control_port = 9052
         self.circuit_timeout = 90
-        self.tor_binary      = '/usr/sbin/tor'
-        self.data_directory  = None
+        self.tor_binary = '/usr/sbin/tor'
+        self.data_directory = None
 
         def read_from_file(filename):
             log.msg("Loading information from %s ..." % opt)
@@ -131,7 +139,7 @@ class BridgetTest(nettest.NetTestCase):
                     if line.startswith('#'):
                         continue
                     else:
-                        lst.append(line.replace('\n',''))
+                        lst.append(line.replace('\n', ''))
                 return lst
 
         def __count_remaining__(which):
@@ -140,24 +148,24 @@ class BridgetTest(nettest.NetTestCase):
             count = len(total) - reach() - unreach()
             return count
 
-        ## XXX should we do report['bridges_up'].append(self.bridges['current'])
+        # XXX should we do report['bridges_up'].append(self.bridges['current'])
         self.bridges = {}
         self.bridges['all'], self.bridges['up'], self.bridges['down'] = \
             ([] for i in range(3))
-        self.bridges['reachable']   = lambda: len(self.bridges['up'])
+        self.bridges['reachable'] = lambda: len(self.bridges['up'])
         self.bridges['unreachable'] = lambda: len(self.bridges['down'])
-        self.bridges['remaining']   = lambda: __count_remaining__(self.bridges)
-        self.bridges['current']     = None
-        self.bridges['pt_type']     = None
-        self.bridges['use_pt']      = False
+        self.bridges['remaining'] = lambda: __count_remaining__(self.bridges)
+        self.bridges['current'] = None
+        self.bridges['pt_type'] = None
+        self.bridges['use_pt'] = False
 
         self.relays = {}
         self.relays['all'], self.relays['up'], self.relays['down'] = \
             ([] for i in range(3))
-        self.relays['reachable']   = lambda: len(self.relays['up'])
+        self.relays['reachable'] = lambda: len(self.relays['up'])
         self.relays['unreachable'] = lambda: len(self.relays['down'])
-        self.relays['remaining']   = lambda: __count_remaining__(self.relays)
-        self.relays['current']     = None
+        self.relays['remaining'] = lambda: __count_remaining__(self.relays)
+        self.relays['current'] = None
 
         if self.localOptions:
             try:
@@ -173,7 +181,7 @@ class BridgetTest(nettest.NetTestCase):
                 self.config.UseBridges = 1
                 self.bridges['all'] = read_from_file(options['bridges'])
             if options['relays']:
-                ## first hop must be in TorState().guards
+                # first hop must be in TorState().guards
                 # XXX where is this defined?
                 self.config.EntryNodes = ','.join(relay_list)
                 self.relays['all'] = read_from_file(options['relays'])
@@ -183,16 +191,18 @@ class BridgetTest(nettest.NetTestCase):
                 self.control_port = options['control']
             if options['random']:
                 log.msg("Using randomized ControlPort and SocksPort ...")
-                self.socks_port   = randint(1024, 2**16)
-                self.control_port = randint(1024, 2**16)
+                self.socks_port = randint(1024, 2 ** 16)
+                self.control_port = randint(1024, 2 ** 16)
             if options['torpath']:
                 self.tor_binary = options['torpath']
             if options['datadir']:
                 self.data_directory = parse_data_dir(options['datadir'])
             if options['transport']:
-                ## ClientTransportPlugin transport exec pathtobinary [options]
-                ## XXX we need a better way to deal with all PTs
-                log.msg("Using ClientTransportPlugin %s" % options['transport'])
+                # ClientTransportPlugin transport exec pathtobinary [options]
+                # XXX we need a better way to deal with all PTs
+                log.msg(
+                    "Using ClientTransportPlugin %s" %
+                    options['transport'])
                 self.bridges['use_pt'] = True
                 [self.bridges['pt_type'], pt_exec] = \
                     options['transport'].split(' ', 1)
@@ -203,8 +213,8 @@ class BridgetTest(nettest.NetTestCase):
                 else:
                     raise PTNotFoundException
 
-            self.config.SocksPort            = self.socks_port
-            self.config.ControlPort          = self.control_port
+            self.config.SocksPort = self.socks_port
+            self.config.ControlPort = self.control_port
             self.config.CookieAuthentication = 1
 
     def test_bridget(self):
@@ -248,16 +258,16 @@ class BridgetTest(nettest.NetTestCase):
             in Bridget it doesn't, so it should be ignored and avoided.
         """
         try:
-            from ooni.utils         import process
-            from ooni.utils.onion   import remove_public_relays, start_tor
-            from ooni.utils.onion   import start_tor_filter_nodes
-            from ooni.utils.onion   import setup_fail, setup_done
-            from ooni.utils.onion   import CustomCircuit
-            from ooni.utils.timer   import deferred_timeout, TimeoutError
-            from ooni.lib.txtorcon  import TorConfig, TorState
+            from ooni.utils import process
+            from ooni.utils.onion import remove_public_relays, start_tor
+            from ooni.utils.onion import start_tor_filter_nodes
+            from ooni.utils.onion import setup_fail, setup_done
+            from ooni.utils.onion import CustomCircuit
+            from ooni.utils.timer import deferred_timeout, TimeoutError
+            from ooni.lib.txtorcon import TorConfig, TorState
         except ImportError:
             raise TxtorconImportError
-        except TxtorconImportError, tie:
+        except TxtorconImportError as tie:
             log.err(tie)
             sys.exit()
 
@@ -318,7 +328,7 @@ class BridgetTest(nettest.NetTestCase):
                         'Bridge', bridges['current'])
                 elif bridges['use_pt'] and bridges['pt_type'] is not None:
                     controller_reponse = yield state.protocol.set_conf(
-                        'Bridge', bridges['pt_type'] +' '+ bridges['current'])
+                        'Bridge', bridges['pt_type'] + ' ' + bridges['current'])
                 else:
                     raise PTNotFoundException
 
@@ -331,16 +341,16 @@ class BridgetTest(nettest.NetTestCase):
 
                 defer.returnValue(finish)
 
-            except Exception, e:
+            except Exception as e:
                 log.err("Reconfiguring torrc with Bridge line %s failed:\n%s"
                         % (bridges['current'], e))
                 defer.returnValue(None)
 
         def attacher_extend_circuit(attacher, deferred, router):
-            ## XXX todo write me
-            ## state.attacher.extend_circuit
+            # XXX todo write me
+            # state.attacher.extend_circuit
             raise NotImplemented
-            #attacher.extend_circuit
+            # attacher.extend_circuit
 
         def state_attach(state, path):
             log.msg("Setting up custom circuit builder...")
@@ -349,14 +359,14 @@ class BridgetTest(nettest.NetTestCase):
             state.add_circuit_listener(attacher)
             return state
 
-            ## OLD
-            #for circ in state.circuits.values():
+            # OLD
+            # for circ in state.circuits.values():
             #    for relay in circ.path:
             #        try:
             #            relay_list.remove(relay)
             #        except KeyError:
             #            continue
-            ## XXX how do we attach to circuits with bridges?
+            # XXX how do we attach to circuits with bridges?
             d = defer.Deferred()
             attacher.request_circuit_build(d)
             return d
@@ -364,28 +374,28 @@ class BridgetTest(nettest.NetTestCase):
         def state_attach_fail(state):
             log.err("Attaching custom circuit builder failed: %s" % state)
 
-        log.msg("Bridget: initiating test ... ")  ## Start the experiment
+        log.msg("Bridget: initiating test ... ")  # Start the experiment
 
-        ## if we've at least one bridge, and our config has no 'Bridge' line
+        # if we've at least one bridge, and our config has no 'Bridge' line
         if self.bridges['remaining']() >= 1 \
                 and not 'Bridge' in self.config.config:
 
-            ## configure our first bridge line
+            # configure our first bridge line
             self.bridges['current'] = self.bridges['all'][0]
             self.config.Bridge = self.bridges['current']
-                                                  ## avoid starting several
-            self.config.save()                    ## processes
-            assert self.config.config.has_key('Bridge'), "No Bridge Line"
+            # avoid starting several
+            self.config.save()  # processes
+            assert 'Bridge' in self.config.config, "No Bridge Line"
 
-            ## start tor and remove bridges which are public relays
+            # start tor and remove bridges which are public relays
             from ooni.utils.onion import start_tor_filter_nodes
             state = start_tor_filter_nodes(reactor, self.config,
                                            self.control_port, self.tor_binary,
                                            self.data_directory, self.bridges)
             #controller = defer.Deferred()
             #controller.addCallback(singleton_semaphore, tor)
-            #controller.addErrback(setup_fail)
-            #bootstrap = defer.gatherResults([controller, filter_bridges],
+            # controller.addErrback(setup_fail)
+            # bootstrap = defer.gatherResults([controller, filter_bridges],
             #                                consumeErrors=True)
 
             if state is not None:
@@ -393,22 +403,22 @@ class BridgetTest(nettest.NetTestCase):
                 log.debug("Current callbacks on TorState():\n%s"
                           % state.callbacks)
 
-        ## if we've got more bridges
+        # if we've got more bridges
         if self.bridges['remaining']() >= 2:
             #all = []
             for bridge in self.bridges['all'][1:]:
                 self.bridges['current'] = bridge
                 #new = defer.Deferred()
                 #new.addCallback(reconfigure_bridge, state, self.bridges)
-                #all.append(new)
+                # all.append(new)
             #check_remaining = defer.DeferredList(all, consumeErrors=True)
-            #state.chainDeferred(check_remaining)
+            # state.chainDeferred(check_remaining)
                 state.addCallback(reconfigure_bridge, self.bridges)
 
         if self.relays['remaining']() > 0:
             while self.relays['remaining']() >= 3:
                 #path = list(self.relays.pop() for i in range(3))
-                #log.msg("Trying path %s" % '->'.join(map(lambda node:
+                # log.msg("Trying path %s" % '->'.join(map(lambda node:
                 #                                         node, path)))
                 self.relays['current'] = self.relays['all'].pop()
                 for circ in state.circuits.values():
@@ -422,13 +432,13 @@ class BridgetTest(nettest.NetTestCase):
                             ext.addCallback(attacher_extend_circuit_done,
                                             state.attacher, circ,
                                             self.relays['current'])
-                        except Exception, e:
+                        except Exception as e:
                             log.err("Extend circuit failed: %s" % e)
                     else:
                         continue
 
-        #state.callback(all)
-        #self.reactor.run()
+        # state.callback(all)
+        # self.reactor.run()
         return state
 
     def disabled_startTest(self, args):
@@ -449,14 +459,14 @@ class BridgetTest(nettest.NetTestCase):
         self.d.addCallbacks(self.finished, log.err)
         return self.d
 
-## ISIS' NOTES
-## -----------
-## TODO:
-##       x  cleanup documentation
-##       x  add DataDirectory option
-##       x  check if bridges are public relays
-##       o  take bridge_desc file as input, also be able to give same
-##          format as output
-##       x  Add asynchronous timeout for deferred, so that we don't wait
-##       o  Add assychronous timout for deferred, so that we don't wait
-##          forever for bridges that don't work.
+# ISIS' NOTES
+# -----------
+# TODO:
+# x  cleanup documentation
+# x  add DataDirectory option
+# x  check if bridges are public relays
+# o  take bridge_desc file as input, also be able to give same
+# format as output
+# x  Add asynchronous timeout for deferred, so that we don't wait
+# o  Add assychronous timout for deferred, so that we don't wait
+# forever for bridges that don't work.

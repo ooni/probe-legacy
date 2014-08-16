@@ -20,7 +20,7 @@ class UsageOptions(usage.Options):
                      'Specify the inter-packet delay in seconds'],
                     ['numPackets', 'n', None,
                      'Specify the number of packets to send per hop'],
-        ]
+    ]
 
 
 class Traceroute(scapyt.BaseScapyTest):

@@ -24,15 +24,16 @@ from ooni.errors import MaximumRedirects
 # (https://panopticlick.eff.org/browser-uniqueness.pdf) paper as the browser user
 # agents with largest anonymity set.
 userAgents = ("Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7",
-    "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3 1 2 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Mobile/7D11",
-    "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
-    "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
-    "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
-    "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
-    "Mozilla/5.0 (Windows; U; Windows NT 6.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
-    "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
-    "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7",
-    "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)")
+              "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3 1 2 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Mobile/7D11",
+              "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+              "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+              "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+              "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+              "Mozilla/5.0 (Windows; U; Windows NT 6.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+              "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2) Gecko/20100115 Firefox/3.6",
+              "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7",
+              "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 (.NET CLR 3.5.30729)")
+
 
 class StringProducer(object):
     implements(IBodyProducer)
@@ -51,7 +52,9 @@ class StringProducer(object):
     def stopProducing(self):
         pass
 
+
 class BodyReceiver(protocol.Protocol):
+
     def __init__(self, finished, content_length=None, body_processor=None):
         self.finished = finished
         self.data = []
@@ -74,8 +77,10 @@ class BodyReceiver(protocol.Protocol):
         except Exception as exc:
             self.finished.errback(exc)
 
+
 class Downloader(protocol.Protocol):
-    def __init__(self,  download_path,
+
+    def __init__(self, download_path,
                  finished, content_length=None):
         self.finished = finished
         self.bytes_remaining = content_length
@@ -94,7 +99,9 @@ class Downloader(protocol.Protocol):
         self.fp.close()
         self.finished.callback(None)
 
+
 class TrueOrderedHeaders(http_headers.Headers):
+
     def __init__(self, rawHeaders=None):
         self._rawHeaders = []
         if isinstance(rawHeaders, list):
@@ -176,6 +183,7 @@ class TrueOrderedHeaders(http_headers.Headers):
 
 
 class _HTTPClientParser(_newclient.HTTPClientParser):
+
     def logPrefix(self):
         return 'HTTPClientParser'
 
@@ -205,6 +213,7 @@ class _HTTPClientParser(_newclient.HTTPClientParser):
 
 
 class _HTTPClientProtocol(_newclient.HTTP11ClientProtocol):
+
     def request(self, request):
         """
         Issue C{request} over C{self.transport} and return a L{Deferred} which
@@ -281,11 +290,13 @@ class _HTTPClientProtocol(_newclient.HTTP11ClientProtocol):
 
 
 class _HTTPClientFactory(protocol.Factory):
+
     def buildProtocol(self, addr):
         return _HTTPClientProtocol()
 
 
 class Response(object):
+
     def __init__(self, response, request, dns_resolutions):
         self.headers = response.headers
         self.code = response.code
@@ -460,7 +471,7 @@ class Request(object):
             return self.request(method, new_uri, headers, body, body_receiver,
                                 ignore_body, previous_response=response,
                                 follow_redirects=True,
-                                redirect_count=redirect_count+1,
+                                redirect_count=redirect_count + 1,
                                 proxy=proxy)
         return response
 

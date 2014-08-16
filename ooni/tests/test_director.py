@@ -30,6 +30,7 @@ mock_launch_tor.return_value = defer.succeed(proto)
 
 
 class TestDirector(ConfigTestCase):
+
     def tearDown(self):
         super(TestDirector, self).tearDown()
         config.tor_state = None
@@ -56,6 +57,7 @@ class TestDirector(ConfigTestCase):
 
 
 class TestStartSniffing(unittest.TestCase):
+
     def setUp(self):
         self.director = Director()
         self.testDetails = {
@@ -73,7 +75,8 @@ class TestStartSniffing(unittest.TestCase):
             with patch('ooni.utils.txscapy.ScapySniffer') as mock_scapy_sniffer:
                 self.director.startSniffing(self.testDetails)
                 sniffer = mock_scapy_sniffer.return_value
-                mock_scapy_factory.registerProtocol.assert_called_once_with(sniffer)
+                mock_scapy_factory.registerProtocol.assert_called_once_with(
+                    sniffer)
 
     def test_start_sniffing_twice(self):
         with patch('ooni.settings.config.scapyFactory') as mock_scapy_factory:
@@ -103,5 +106,5 @@ class TestStartSniffing(unittest.TestCase):
                 self.director.measurementSucceeded('awesome', measurement)
                 self.assertEqual(len(self.director.sniffers), 0)
                 sniffer = mock_scapy_sniffer.return_value
-                mock_scapy_factory.unRegisterProtocol.assert_called_once_with(sniffer)
-
+                mock_scapy_factory.unRegisterProtocol.assert_called_once_with(
+                    sniffer)

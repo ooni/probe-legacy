@@ -6,7 +6,9 @@ from ooni.nettest import NetTestCase
 from ooni.errors import failureToString
 from ooni.utils import log
 
+
 class TCPSender(protocol.Protocol):
+
     def __init__(self):
         self.received_data = ''
         self.sent_data = ''
@@ -44,9 +46,12 @@ class TCPSender(protocol.Protocol):
         self.sent_data = payload
         self.transport.write(payload)
 
+
 class TCPSenderFactory(protocol.Factory):
+
     def buildProtocol(self, addr):
         return TCPSender()
+
 
 class TCPTest(NetTestCase):
     name = "Base TCP Test"
@@ -87,7 +92,8 @@ class TCPTest(NetTestCase):
             proto.deferred = d1
             proto.sendPayload(payload)
             if self.timeout:
-                # XXX-Twisted this logic should probably go inside of the protocol
+                # XXX-Twisted this logic should probably go inside of the
+                # protocol
                 reactor.callLater(self.timeout, closeConnection, proto)
 
         point = TCP4ClientEndpoint(reactor, self.address, self.port)
@@ -96,4 +102,3 @@ class TCPTest(NetTestCase):
         d2.addCallback(connected)
         d2.addErrback(errback)
         return d1
-

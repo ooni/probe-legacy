@@ -40,17 +40,31 @@ class OConfig(object):
             self._custom_home = ooni_home
 
         if self.global_options.get('datadir'):
-            self.data_directory = abspath(expanduser(self.global_options['datadir']))
+            self.data_directory = abspath(
+                expanduser(
+                    self.global_options['datadir']))
         elif self.advanced.get('data_dir'):
             self.data_directory = self.advanced['data_dir']
         elif hasattr(sys, 'real_prefix'):
-            self.data_directory = os.path.abspath(os.path.join(sys.prefix, 'share', 'ooni'))
+            self.data_directory = os.path.abspath(
+                os.path.join(
+                    sys.prefix,
+                    'share',
+                    'ooni'))
         else:
             self.data_directory = '/usr/share/ooni/'
 
-        self.nettest_directory = abspath(os.path.join(__file__, '..', 'nettests'))
+        self.nettest_directory = abspath(
+            os.path.join(
+                __file__,
+                '..',
+                'nettests'))
 
-        self.ooni_home = os.path.join(expanduser('~'+self.current_user), '.ooni')
+        self.ooni_home = os.path.join(
+            expanduser(
+                '~' +
+                self.current_user),
+            '.ooni')
         if self._custom_home:
             self.ooni_home = self._custom_home
         self.inputs_directory = os.path.join(self.ooni_home, 'inputs')
@@ -65,7 +79,11 @@ class OConfig(object):
             self.config_file = os.path.join(self.ooni_home, 'ooniprobe.conf')
 
         if 'logfile' in self.basic:
-            self.basic.logfile = expanduser(self.basic.logfile.replace('~','~'+self.current_user))
+            self.basic.logfile = expanduser(
+                self.basic.logfile.replace(
+                    '~',
+                    '~' +
+                    self.current_user))
 
     def initialize_ooni_home(self, ooni_home=None):
         if ooni_home:
@@ -93,9 +111,17 @@ class OConfig(object):
             with open(target_config_file, 'w+') as w:
                 for line in f:
                     if line.startswith('    data_dir: '):
-                        w.write('    data_dir: %s\n' % os.path.join(usr_share_path, 'ooni'))
+                        w.write(
+                            '    data_dir: %s\n' %
+                            os.path.join(
+                                usr_share_path,
+                                'ooni'))
                     elif line.startswith('    geoip_data_dir: '):
-                        w.write('    geoip_data_dir: %s\n' % os.path.join(usr_share_path, 'GeoIP'))
+                        w.write(
+                            '    geoip_data_dir: %s\n' %
+                            os.path.join(
+                                usr_share_path,
+                                'GeoIP'))
                     else:
                         w.write(line)
 
@@ -121,7 +147,8 @@ class OConfig(object):
     def check_incoherences(self, configuration):
         incoherent = []
 
-        if configuration['advanced']['interface'] != 'auto' and configuration['advanced']['interface'] not in get_if_list():
+        if configuration['advanced']['interface'] != 'auto' and configuration[
+                'advanced']['interface'] not in get_if_list():
             incoherent.append('advanced:interface')
 
         self.log_incoherences(incoherent)
@@ -129,10 +156,13 @@ class OConfig(object):
     def log_incoherences(self, incoherences):
         if len(incoherences) > 0:
             if len(incoherences) > 1:
-                incoherent_pretty = ", ".join(incoherences[:-1]) + ' and ' + incoherences[-1]
+                incoherent_pretty = ", ".join(
+                    incoherences[:-1]) + ' and ' + incoherences[-1]
             else:
                 incoherent_pretty = incoherences[0]
-            log.err("You must set properly %s in %s." % (incoherent_pretty, self.config_file))
+            log.err(
+                "You must set properly %s in %s." %
+                (incoherent_pretty, self.config_file))
             raise errors.ConfigFileIncoherent
 
     @defer.inlineCallbacks
@@ -165,7 +195,8 @@ class OConfig(object):
             self.log_incoherences(incoherent)
 
     def generate_pcap_filename(self, testDetails):
-        test_name, start_time = testDetails['test_name'], testDetails['start_time']
+        test_name, start_time = testDetails[
+            'test_name'], testDetails['start_time']
         start_time = otime.epochToTimestamp(start_time)
         return "report-%s-%s.%s" % (test_name, start_time, "pcap")
 

@@ -6,6 +6,7 @@ from twisted.internet.error import ConnectionDone
 
 from ooni.utils import log
 
+
 def read_pcap(filename):
     """
     @param filename: Filesystem path to the pcap.
@@ -67,17 +68,21 @@ def read_pcap(filename):
 
     return messages
 
+
 def read_yaml(filename):
     f = open(filename)
     obj = yaml.safe_load(f)
     f.close()
     return obj
 
+
 class NoInputSpecified(Exception):
     pass
 
+
 class StepError(Exception):
     pass
+
 
 def daphn3MutateString(string, i):
     """
@@ -91,6 +96,7 @@ def daphn3MutateString(string, i):
             mutated += string[y]
     return mutated
 
+
 def daphn3Mutate(steps, step_idx, mutation_idx):
     """
     Take a set of steps and a step index and mutates the step of that
@@ -101,12 +107,13 @@ def daphn3Mutate(steps, step_idx, mutation_idx):
         if idx == step_idx:
             step_string = step.values()[0]
             step_key = step.keys()[0]
-            mutated_string = daphn3MutateString(step_string, 
-                    mutation_idx)
+            mutated_string = daphn3MutateString(step_string,
+                                                mutation_idx)
             mutated_steps.append({step_key: mutated_string})
         else:
             mutated_steps.append(step)
     return mutated_steps
+
 
 class Daphn3Protocol(protocol.Protocol):
     steps = None
@@ -126,8 +133,8 @@ class Daphn3Protocol(protocol.Protocol):
     def _current_step_data(self):
         step_idx, mutation_idx = self.factory.mutation
         log.debug("Mutating %s %s" % (step_idx, mutation_idx))
-        mutated_step = daphn3Mutate(self.steps, 
-                step_idx, mutation_idx)
+        mutated_step = daphn3Mutate(self.steps,
+                                    step_idx, mutation_idx)
         log.debug("Mutated packet into %s" % mutated_step)
         return mutated_step[self.current_step].values()[0]
 
@@ -169,9 +176,11 @@ class Daphn3Protocol(protocol.Protocol):
                     perhaps there is something wrong with the state machine?")
 
         self.current_data_received += len(data)
-        expected_data_in_this_state = len(self.steps[self.current_step].values()[0])
+        expected_data_in_this_state = len(
+            self.steps[
+                self.current_step].values()[0])
 
-        log.debug("Current data received %s" %  self.current_data_received)
+        log.debug("Current data received %s" % self.current_data_received)
         if self.current_data_received >= expected_data_in_this_state:
             self.nextStep()
 
@@ -180,7 +189,7 @@ class Daphn3Protocol(protocol.Protocol):
         # [step_idx, mutation_idx]
         c_step_idx, c_mutation_idx = self.factory.mutation
         log.debug("[%s]: c_step_idx: %s | c_mutation_idx: %s" % (self.role,
-            c_step_idx, c_mutation_idx))
+                                                                 c_step_idx, c_mutation_idx))
 
         if c_step_idx >= (len(self.steps) - 1):
             log.err("No censorship fingerprint bisected.")
@@ -205,4 +214,3 @@ class Daphn3Protocol(protocol.Protocol):
     def connectionLost(self, reason):
         self.debug("--- Lost the connection ---")
         self.nextMutation()
-

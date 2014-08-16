@@ -170,6 +170,7 @@ class InvalidOONIBBouncerAddress(Exception):
 class AllReportersFailed(Exception):
     pass
 
+
 class ReportNotCreated(Exception):
     pass
 
@@ -184,6 +185,7 @@ class TorStateNotFound(Exception):
 
 class TorControlPortNotFound(Exception):
     pass
+
 
 class InsufficientPrivileges(Exception):
     pass
@@ -250,6 +252,7 @@ class NetTestNotFound(Exception):
 
 
 class MissingRequiredOption(Exception):
+
     def __init__(self, message, net_test_loader):
         super(MissingRequiredOption, self).__init__()
         self.net_test_loader = net_test_loader
@@ -257,9 +260,11 @@ class MissingRequiredOption(Exception):
 
 
 class OONIUsageError(usage.UsageError):
+
     def __init__(self, net_test_loader):
         super(OONIUsageError, self).__init__()
         self.net_test_loader = net_test_loader
+
 
 class FailureToLoadNetTest(Exception):
     pass
@@ -296,24 +301,31 @@ class ReportLogExists(Exception):
 class InvalidConfigFile(Exception):
     pass
 
+
 class ConfigFileIncoherent(Exception):
     pass
 
 
 class UnsupportedPlatform(Exception):
+
     """Support for this platform is not currently available."""
     pass
 
+
 class IfaceError(Exception):
+
     """Could not find default network interface."""
     pass
 
+
 class PermissionsError(SystemExit):
+
     """This test requires admin or root privileges to run. Exiting..."""
 
 
 class MaximumRedirects(Exception):
     pass
+
 
 def get_error(error_key):
     if error_key == 'test-helpers-key-missing':

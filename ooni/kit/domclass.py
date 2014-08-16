@@ -42,20 +42,21 @@ alltags = ['A', 'ABBR', 'ACRONYM', 'ADDRESS', 'APPLET', 'AREA', 'B', 'BASE',
 
 # Reduced subset of only the most common tags
 commontags = ['A', 'B', 'BLOCKQUOTE', 'BODY', 'BR', 'BUTTON', 'CAPTION',
-           'CENTER', 'CITE', 'CODE', 'COL', 'DD', 'DIV',
-           'DL', 'DT', 'EM', 'FIELDSET', 'FONT', 'FORM', 'FRAME', 'FRAMESET', 'H1', 'H2',
-           'H3', 'H4', 'H5', 'H6', 'HEAD', 'HR', 'HTML', 'IFRAME ', 'IMG',
-           'INPUT', 'INS', 'LABEL', 'LEGEND', 'LI', 'LINK', 'MAP',
-           'MENU', 'META', 'NOFRAMES', 'NOSCRIPT', 'OBJECT', 'OL', 'OPTION',
-           'P', 'PRE', 'SCRIPT', 'SELECT', 'SMALL', 'SPAN',
-           'STRIKE', 'STRONG', 'STYLE', 'SUB', 'SUP', 'TABLE', 'TBODY', 'TD',
-           'TEXTAREA', 'TFOOT', 'TH', 'THEAD', 'TITLE', 'TR', 'TT', 'U', 'UL']
+              'CENTER', 'CITE', 'CODE', 'COL', 'DD', 'DIV',
+              'DL', 'DT', 'EM', 'FIELDSET', 'FONT', 'FORM', 'FRAME', 'FRAMESET', 'H1', 'H2',
+              'H3', 'H4', 'H5', 'H6', 'HEAD', 'HR', 'HTML', 'IFRAME ', 'IMG',
+              'INPUT', 'INS', 'LABEL', 'LEGEND', 'LI', 'LINK', 'MAP',
+              'MENU', 'META', 'NOFRAMES', 'NOSCRIPT', 'OBJECT', 'OL', 'OPTION',
+              'P', 'PRE', 'SCRIPT', 'SELECT', 'SMALL', 'SPAN',
+              'STRIKE', 'STRONG', 'STYLE', 'SUB', 'SUP', 'TABLE', 'TBODY', 'TD',
+              'TEXTAREA', 'TFOOT', 'TH', 'THEAD', 'TITLE', 'TR', 'TT', 'U', 'UL']
 
 # The tags we are intested in using for our analysis
 thetags = ['A', 'DIV', 'FRAME', 'H1', 'H2',
            'H3', 'H4', 'IFRAME ', 'INPUT',
-           'LABEL','LI', 'P', 'SCRIPT', 'SPAN',
+           'LABEL', 'LI', 'P', 'SCRIPT', 'SPAN',
            'STYLE', 'TR']
+
 
 def compute_probability_matrix(dataset):
     """
@@ -80,7 +81,7 @@ def compute_probability_matrix(dataset):
         except:
             y = len(thetags)
 
-        matrix[x,y] += 1
+        matrix[x, y] += 1
 
     for x in xrange(len(thetags) + 1):
         possibilities = 0
@@ -89,9 +90,10 @@ def compute_probability_matrix(dataset):
 
         for i in xrange(len(matrix[x])):
             if possibilities != 0:
-                matrix[x][i] = matrix[x][i]/possibilities
+                matrix[x][i] = matrix[x][i] / possibilities
 
     return matrix
+
 
 def compute_eigenvalues(matrix):
     """
@@ -100,6 +102,7 @@ def compute_eigenvalues(matrix):
     :matrix: must be a square matrix and diagonalizable.
     """
     return numpy.linalg.eigvals(matrix)
+
 
 def readDOM(content=None, filename=None, debug=False):
     """
@@ -140,17 +143,20 @@ def readDOM(content=None, filename=None, debug=False):
 
     return couples
 
-def compute_eigenvalues_from_DOM(*arg,**kw):
+
+def compute_eigenvalues_from_DOM(*arg, **kw):
     dom = readDOM(*arg, **kw)
     probability_matrix = compute_probability_matrix(dom)
     eigenvalues = compute_eigenvalues(probability_matrix)
     return eigenvalues
 
+
 def compute_correlation(matrix_a, matrix_b):
     correlation = numpy.vdot(matrix_a, matrix_b)
-    correlation /= numpy.linalg.norm(matrix_a)*numpy.linalg.norm(matrix_b)
-    correlation = (correlation + 1)/2
+    correlation /= numpy.linalg.norm(matrix_a) * numpy.linalg.norm(matrix_b)
+    correlation = (correlation + 1) / 2
     return correlation
+
 
 def benchmark():
     """
@@ -241,4 +247,4 @@ def benchmark():
 
     print "Corelation: %s" % correlation
 
-#benchmark()
+# benchmark()

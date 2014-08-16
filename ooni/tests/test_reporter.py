@@ -12,7 +12,6 @@ from ooni import errors as e
 from ooni.reporter import YAMLReporter, OONIBReporter, OONIBReportLog
 
 
-
 class MockTest(object):
     _start_time = time.time()
     report = {'report_content': 'ham'}
@@ -122,8 +121,8 @@ class TestOONIBReportLog(unittest.TestCase):
     @defer.inlineCallbacks
     def test_report_created(self):
         yield self.report_log.created("path_to_my_report.yaml",
-                                             'httpo://foo.onion',
-                                             'someid')
+                                      'httpo://foo.onion',
+                                      'someid')
         with open(self.report_log.file_name) as f:
             report = yaml.safe_load(f)
             assert "path_to_my_report.yaml" in report
@@ -131,11 +130,11 @@ class TestOONIBReportLog(unittest.TestCase):
     @defer.inlineCallbacks
     def test_concurrent_edit(self):
         d1 = self.report_log.created("path_to_my_report1.yaml",
-                                            'httpo://foo.onion',
-                                            'someid1')
+                                     'httpo://foo.onion',
+                                     'someid1')
         d2 = self.report_log.created("path_to_my_report2.yaml",
-                                            'httpo://foo.onion',
-                                            'someid2')
+                                     'httpo://foo.onion',
+                                     'someid2')
         yield defer.DeferredList([d1, d2])
         with open(self.report_log.file_name) as f:
             report = yaml.safe_load(f)
@@ -145,8 +144,8 @@ class TestOONIBReportLog(unittest.TestCase):
     @defer.inlineCallbacks
     def test_report_closed(self):
         yield self.report_log.created("path_to_my_report.yaml",
-                                             'httpo://foo.onion',
-                                             'someid')
+                                      'httpo://foo.onion',
+                                      'someid')
         yield self.report_log.closed("path_to_my_report.yaml")
 
         with open(self.report_log.file_name) as f:
@@ -156,7 +155,7 @@ class TestOONIBReportLog(unittest.TestCase):
     @defer.inlineCallbacks
     def test_report_creation_failed(self):
         yield self.report_log.creation_failed("path_to_my_report.yaml",
-                                                     'httpo://foo.onion')
+                                              'httpo://foo.onion')
         with open(self.report_log.file_name) as f:
             report = yaml.safe_load(f)
         assert "path_to_my_report.yaml" in report

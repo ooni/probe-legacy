@@ -1,4 +1,5 @@
 class RateLimiter(object):
+
     """
     The abstract class that imposes limits over how measurements are scheduled,
     how retries are handled and when we should be giving up on a certain
@@ -35,7 +36,9 @@ class RateLimiter(object):
     def failed(self, measurement):
         raise NotImplemented
 
+
 class StaticRateLimiter(RateLimiter):
+
     """
     This is a static ratelimiter that returns constant values.
     """
@@ -60,9 +63,10 @@ class StaticRateLimiter(RateLimiter):
     def failed(self, measurement, failure):
         pass
 
+
 class TimeoutRateLimiter(RateLimiter):
     pass
 
+
 class BandwidthRateLimiter(RateLimiter):
     pass
-

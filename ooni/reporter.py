@@ -171,13 +171,18 @@ class YAMLReporter(OReporter):
 
     """
 
-    def __init__(self, test_details, report_destination='.', report_filename=None):
+    def __init__(self, test_details, report_destination='.',
+                 report_filename=None):
         self.reportDestination = report_destination
 
         if not os.path.isdir(report_destination):
             raise errors.InvalidDestination
 
-        report_filename = generate_filename(test_details, filename=report_filename, prefix='report', extension='yamloo')
+        report_filename = generate_filename(
+            test_details,
+            filename=report_filename,
+            prefix='report',
+            extension='yamloo')
 
         report_path = os.path.join(self.reportDestination, report_filename)
 
@@ -362,7 +367,7 @@ class OONIBReporter(OReporter):
             log.err("Host is not reachable (HostUnreachable error")
             raise errors.OONIBReportCreationError
 
-        except Exception, e:
+        except Exception as e:
             log.err("Failed to connect to reporter backend")
             log.exception(e)
             raise errors.OONIBReportCreationError
@@ -376,7 +381,7 @@ class OONIBReporter(OReporter):
 
         try:
             parsed_response = json.loads(backend_response)
-        except Exception, e:
+        except Exception as e:
             log.err("Failed to parse collector response %s" % backend_response)
             log.exception(e)
             raise errors.OONIBReportCreationError
@@ -570,7 +575,9 @@ class Report(object):
 
         self.report_log = OONIBReportLog()
 
-        self.yaml_reporter = YAMLReporter(test_details, report_filename=report_filename)
+        self.yaml_reporter = YAMLReporter(
+            test_details,
+            report_filename=report_filename)
         self.report_filename = self.yaml_reporter.report_path
 
         self.oonib_reporter = None

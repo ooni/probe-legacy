@@ -6,7 +6,9 @@ from ooni import nettest
 from ooni.kit import daphn3
 from ooni.utils import log
 
+
 class Daphn3ClientProtocol(daphn3.Daphn3Protocol):
+
     def nextStep(self):
         log.debug("Moving on to next step in the state walk")
         self.current_data_received = 0
@@ -14,8 +16,10 @@ class Daphn3ClientProtocol(daphn3.Daphn3Protocol):
             log.msg("Reached the end of the state machine")
             log.msg("Censorship fingerpint bisected!")
             step_idx, mutation_idx = self.factory.mutation
-            log.msg("step_idx: %s | mutation_id: %s" % (step_idx, mutation_idx))
-            #self.transport.loseConnection()
+            log.msg(
+                "step_idx: %s | mutation_id: %s" %
+                (step_idx, mutation_idx))
+            # self.transport.loseConnection()
             if self.report:
                 self.report['mutation_idx'] = mutation_idx
                 self.report['step_idx'] = step_idx
@@ -31,7 +35,7 @@ class Daphn3ClientProtocol(daphn3.Daphn3Protocol):
 
 class Daphn3ClientFactory(protocol.ClientFactory):
     protocol = daphn3.Daphn3Protocol
-    mutation = [0,0]
+    mutation = [0, 0]
     steps = None
 
     def buildProtocol(self, addr):
@@ -52,21 +56,23 @@ class Daphn3ClientFactory(protocol.ClientFactory):
         log.err("Daphn3 client connection lost")
         print reason
 
+
 class daphn3Args(usage.Options):
     optParameters = [
-                     ['host', 'h', '127.0.0.1', 'Target Hostname'],
-                     ['port', 'p', 57003, 'Target port number']]
+        ['host', 'h', '127.0.0.1', 'Target Hostname'],
+        ['port', 'p', 57003, 'Target port number']]
 
     optFlags = [['pcap', 'c', 'Specify that the input file is a pcap file'],
                 ['yaml', 'y', 'Specify that the input file is a YAML file (default)']]
+
 
 class daphn3Test(nettest.NetTestCase):
 
     name = "Daphn3"
     description = "Bisects the censors fingerprint by mutating the given input packets."
     usageOptions = daphn3Args
-    inputFile = ['file', 'f', None, 
-            'Specify the pcap or YAML file to be used as input to the test']
+    inputFile = ['file', 'f', None,
+                 'Specify the pcap or YAML file to be used as input to the test']
 
     #requiredOptions = ['file']
     requiresRoot = False
@@ -101,7 +107,8 @@ class daphn3Test(nettest.NetTestCase):
             log.msg("Failed to connect")
             self.report['censored'] = True
             self.report['mutation'] = 0
-            raise Exception("Error in connection, perhaps the backend is censored")
+            raise Exception(
+                "Error in connection, perhaps the backend is censored")
             return
 
         def success(protocol):
@@ -118,4 +125,3 @@ class daphn3Test(nettest.NetTestCase):
         d.addErrback(failure)
         d.addCallback(success)
         return d
-

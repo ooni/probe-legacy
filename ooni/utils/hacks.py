@@ -55,4 +55,3 @@ def patched_reduce_ex(self, proto):
         return copy_reg._reconstructor, args, dict
     else:
         return copy_reg._reconstructor, args
-

@@ -59,9 +59,11 @@ tor:
 
 
 class TestRunDirector(ConfigTestCase):
+
     def setUp(self):
         if not is_internet_connected():
-            self.skipTest("You must be connected to the internet to run this test")
+            self.skipTest(
+                "You must be connected to the internet to run this test")
         try:
             checkForRoot()
         except InsufficientPrivileges:
@@ -82,7 +84,8 @@ class TestRunDirector(ConfigTestCase):
         self.filenames = []
 
     @defer.inlineCallbacks
-    def run_helper(self, test_name, nettest_args, verify_function, ooni_args=()):
+    def run_helper(
+            self, test_name, nettest_args, verify_function, ooni_args=()):
         output_file = os.path.abspath('test_report.yamloo')
         self.filenames.append(output_file)
         oldargv = sys.argv

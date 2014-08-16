@@ -28,6 +28,7 @@ class DummyTestCase(NetTestCase):
 
 
 class BaseTestCase(unittest.TestCase):
+
     def setUp(self):
         self.filename = ""
         self.cwd = os.getcwd()
@@ -47,6 +48,7 @@ class BaseTestCase(unittest.TestCase):
 
 
 class TestInputFile(BaseTestCase):
+
     def tearDown(self):
         if self.filename != "":
             os.remove(self.filename)
@@ -85,6 +87,7 @@ class TestInputFile(BaseTestCase):
 
 
 class TestDeck(BaseTestCase):
+
     def setUp(self):
         super(TestDeck, self).setUp()
         deck_hash = sha256(self.dummy_deck_content).hexdigest()
@@ -129,8 +132,10 @@ class TestDeck(BaseTestCase):
         deck.loadDeck(self.deck_file)
         yield deck.lookupTestHelpers()
 
-        assert deck.netTestLoaders[0].collector == 'httpo://thirteenchars1234.onion'
+        assert deck.netTestLoaders[
+            0].collector == 'httpo://thirteenchars1234.onion'
 
         required_test_helpers = deck.netTestLoaders[0].requiredTestHelpers
         assert len(required_test_helpers) == 1
-        assert required_test_helpers[0]['test_class'].localOptions['backend'] == '127.0.0.1'
+        assert required_test_helpers[0][
+            'test_class'].localOptions['backend'] == '127.0.0.1'

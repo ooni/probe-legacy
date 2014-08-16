@@ -8,6 +8,7 @@ defer.setDebugging(True)
 
 
 class TestTxScapy(unittest.TestCase):
+
     def setUp(self):
         # if not txscapy.hasRawSocketPermission():
         # self.skipTest("No raw socket permissions...")
@@ -38,8 +39,12 @@ class TestTxScapy(unittest.TestCase):
         sender = txscapy.ScapySender()
         self.scapy_factory.registerProtocol(sender)
 
-        packet_sent = IP(dst='8.8.8.8', src='127.0.0.1') / TCP(dport=53, sport=5300)
-        packet_received = IP(dst='127.0.0.1', src='8.8.8.8') / TCP(sport=53, dport=5300)
+        packet_sent = IP(dst='8.8.8.8',
+                         src='127.0.0.1') / TCP(dport=53,
+                                                sport=5300)
+        packet_received = IP(dst='127.0.0.1',
+                             src='8.8.8.8') / TCP(sport=53,
+                                                  dport=5300)
 
         d = sender.startSending([packet_sent])
         self.scapy_factory.super_socket.send.assert_called_with(packet_sent)

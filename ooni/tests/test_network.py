@@ -6,6 +6,7 @@ from ooni.network import http
 
 
 class TestNetworkHTTP(unittest.TestCase, FakeReactorAndConnectMixin):
+
     def setUp(self):
         self.request = http.Request()
 

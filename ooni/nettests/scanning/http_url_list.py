@@ -8,13 +8,16 @@ from twisted.python import usage
 from ooni.templates import httpt
 from ooni.utils import log
 
+
 class UsageOptions(usage.Options):
     optParameters = [['content', 'c', None,
-                        'The file to read from containing the content of a block page'],
+                      'The file to read from containing the content of a block page'],
                      ['url', 'u', None, 'Specify a single URL to test.']
-                    ]
+                     ]
+
 
 class HTTPURLList(httpt.HTTPTest):
+
     """
     Performs GET, POST and PUT requests to a list of URLs specified as
     input and checks if the page that we get back as a result matches that
@@ -32,8 +35,8 @@ class HTTPURLList(httpt.HTTPTest):
     requiresRoot = False
     requiresTor = False
 
-    inputFile = ['file', 'f', None, 
-            'List of URLS to perform GET and POST requests to']
+    inputFile = ['file', 'f', None,
+                 'List of URLS to perform GET and POST requests to']
 
     def setUp(self):
         """
@@ -56,7 +59,7 @@ class HTTPURLList(httpt.HTTPTest):
         """
         self.report['censored'] = True
 
-        censorship_page = open(self.localOptions['content']).xreadlines()
+        censorship_page = open(self.localOptions['content'])
         response_page = iter(body.split("\n"))
 
         # We first allign the two pages to the first HTML tag (something

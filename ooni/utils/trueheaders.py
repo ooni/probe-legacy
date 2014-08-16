@@ -26,15 +26,16 @@ from ooni.utils import log
 
 
 class TrueHeaders(http_headers.Headers):
+
     def __init__(self, rawHeaders=None):
         self._rawHeaders = dict()
         if rawHeaders is not None:
             for name, values in rawHeaders.iteritems():
-                if type(values) is list:
+                if isinstance(values, list):
                     self.setRawHeaders(name, values[:])
-                elif type(values) is dict:
+                elif isinstance(values, dict):
                     self._rawHeaders[name.lower()] = values
-                elif type(values) is str:
+                elif isinstance(values, str):
                     self.setRawHeaders(name, values)
 
     def setRawHeaders(self, name, values):
@@ -72,7 +73,7 @@ class TrueHeaders(http_headers.Headers):
             except KeyError:
                 pass
 
-        for k, v in itertools.chain(headers_a.getAllRawHeaders(), \
+        for k, v in itertools.chain(headers_a.getAllRawHeaders(),
                                     headers_b.getAllRawHeaders()):
             field_names.append(k)
 
@@ -94,6 +95,7 @@ class TrueHeaders(http_headers.Headers):
 
 
 class HTTPClientParser(_newclient.HTTPClientParser):
+
     def logPrefix(self):
         return 'HTTPClientParser'
 
@@ -112,6 +114,7 @@ class HTTPClientParser(_newclient.HTTPClientParser):
 
 
 class HTTP11ClientProtocol(_newclient.HTTP11ClientProtocol):
+
     def request(self, request):
         if self._state != 'QUIESCENT':
             return fail(RequestNotSent())
@@ -159,12 +162,14 @@ class HTTPConnectionPool(client.HTTPConnectionPool):
 
 
 class TrueHeadersAgent(client.Agent):
+
     def __init__(self, *args, **kw):
         super(TrueHeadersAgent, self).__init__(*args, **kw)
         self._pool = HTTPConnectionPool(reactor, False)
 
 
 class TrueHeadersSOCKS5Agent(SOCKS5Agent):
+
     def __init__(self, *args, **kw):
         super(TrueHeadersSOCKS5Agent, self).__init__(*args, **kw)
         self._pool = HTTPConnectionPool(reactor, False)

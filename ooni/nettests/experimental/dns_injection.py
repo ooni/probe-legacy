@@ -6,13 +6,19 @@ from ooni.templates import dnst
 from ooni import nettest
 from ooni.utils import log
 
+
 class UsageOptions(usage.Options):
     optParameters = [
-            ['resolver', 'r', '8.8.8.1', 'an invalid DNS resolver'],
-            ['timeout', 't', 3, 'timeout after which we should consider the query failed']
+        ['resolver', 'r', '8.8.8.1', 'an invalid DNS resolver'],
+        ['timeout',
+         't',
+         3,
+         'timeout after which we should consider the query failed']
     ]
 
+
 class DNSInjectionTest(dnst.DNSTest):
+
     """
     This test detects DNS spoofed DNS responses by performing UDP based DNS
     queries towards an invalid DNS resolver.
@@ -50,6 +56,7 @@ class DNSInjectionTest(dnst.DNSTest):
         self.report['injected'] = None
 
         d = self.performALookup(self.input, self.resolver)
+
         @d.addCallback
         def cb(res):
             log.msg("The DNS query for %s is injected" % self.input)
@@ -62,4 +69,3 @@ class DNSInjectionTest(dnst.DNSTest):
             self.report['injected'] = False
 
         return d
-

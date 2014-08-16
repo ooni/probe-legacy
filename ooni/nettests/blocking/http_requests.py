@@ -72,14 +72,14 @@ class HTTPRequestsTest(httpt.HTTPTest):
     def compare_body_lengths(self, body_length_a, body_length_b):
 
         if body_length_b == 0 and body_length_a != 0:
-            rel = float(body_length_b)/float(body_length_a)
+            rel = float(body_length_b) / float(body_length_a)
         elif body_length_b == 0 and body_length_a == 0:
             rel = float(1)
         else:
-            rel = float(body_length_a)/float(body_length_b)
+            rel = float(body_length_a) / float(body_length_b)
 
         if rel > 1:
-            rel = 1/rel
+            rel = 1 / rel
 
         self.report['body_proportion'] = rel
         if rel > float(self.factor):

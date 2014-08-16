@@ -13,6 +13,7 @@ from bases import ConfigTestCase
 
 
 class TestSettings(ConfigTestCase):
+
     def setUp(self):
         super(ConfigTestCase, self).setUp()
         self.conf = OConfig()
@@ -29,7 +30,7 @@ class TestSettings(ConfigTestCase):
 
     def run_tor(self):
         def progress(percent, tag, summary):
-            ticks = int((percent/100.0) * 10.0)
+            ticks = int((percent / 100.0) * 10.0)
             prog = (ticks * '#') + ((10 - ticks) * '.')
             print '%s %s' % (prog, summary)
 
@@ -41,13 +42,16 @@ class TestSettings(ConfigTestCase):
 
     def run_silly_server(self):
         class SillyProtocol(Protocol):
+
             def __init__(self, factory):
                 self.factory = factory
 
         class SillyFactory(Factory):
             protocol = SillyProtocol
 
-        self.silly_listener = reactor.listenTCP(self.conf.tor.socks_port, SillyFactory())
+        self.silly_listener = reactor.listenTCP(
+            self.conf.tor.socks_port,
+            SillyFactory())
 
     def test_vanilla_configuration(self):
         self.conf.check_incoherences(self.configuration)
@@ -126,7 +130,11 @@ class TestSettings(ConfigTestCase):
 
     def test_check_incoherences_interface(self):
         self.configuration['advanced']['interface'] = 'funky'
-        self.assertRaises(errors.ConfigFileIncoherent, self.conf.check_incoherences, self.configuration)
+        self.assertRaises(
+            errors.ConfigFileIncoherent,
+            self.conf.check_incoherences,
+            self.configuration)
 
-        self.configuration['advanced']['interface'] = random.choice(get_if_list())
+        self.configuration['advanced'][
+            'interface'] = random.choice(get_if_list())
         self.conf.check_incoherences(self.configuration)

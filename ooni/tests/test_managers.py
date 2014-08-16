@@ -200,6 +200,7 @@ class TestTaskManager(unittest.TestCase):
 
 
 class TestMeasurementManager(unittest.TestCase):
+
     def setUp(self):
         mock_director = MockDirector()
 

@@ -50,13 +50,17 @@ __desc__ = "Captive portal detection test"
 
 class UsageOptions(usage.Options):
     optParameters = [['asset', 'a', None, 'Asset file'],
-                     ['experiment-url', 'e', 'http://google.com/', 'Experiment URL'],
+                     ['experiment-url',
+                      'e',
+                      'http://google.com/',
+                      'Experiment URL'],
                      ['user-agent', 'u', random.choice(net.userAgents),
                       'User agent for HTTP requests']
-    ]
+                     ]
 
 
 class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
+
     """
     Compares content and status codes of HTTP responses, and attempts
     to determine if content has been altered.
@@ -77,8 +81,9 @@ class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
         object.
         """
         url = urlparse(url).geturl()
-        #XXX: HTTP Error 302: The HTTP server returned a redirect error that
-        #would lead to an infinite loop.  The last 30x error message was: Found
+        # XXX: HTTP Error 302: The HTTP server returned a redirect error that
+        # would lead to an infinite loop.  The last 30x error message was:
+        # Found
         try:
             response = yield self.doRequest(url, "GET", headers)
             defer.returnValue(response)
@@ -198,7 +203,9 @@ class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
             ret = True, experiment_address
             defer.returnValue(ret)
         else:
-            log.msg("DNS comparison of control '%s' does not" % control_address)
+            log.msg(
+                "DNS comparison of control '%s' does not" %
+                control_address)
             log.msg("match experiment response '%s'" % experiment_address)
             ret = False, experiment_address
             defer.returnValue(ret)
@@ -345,7 +352,8 @@ class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
         return random_hostname
 
     @defer.inlineCallbacks
-    def compare_random_hostnames(self, hostname_count=None, hostname_length=None):
+    def compare_random_hostnames(
+            self, hostname_count=None, hostname_length=None):
         """
         Get hostname_count number of random hostnames with SLD length
         of hostname_length, and then attempt DNS resolution. If no
@@ -408,8 +416,10 @@ class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
         else:
             log.debug("Apparently, pigs are flying on your network, 'cause a")
             log.debug("bunch of hostnames made from 32-byte random strings")
-            log.debug("just magically resolved to a bunch of random addresses.")
-            log.debug("That is definitely highly improbable. In fact, my napkin")
+            log.debug(
+                "just magically resolved to a bunch of random addresses.")
+            log.debug(
+                "That is definitely highly improbable. In fact, my napkin")
             log.debug("tells me that the probability of just one of those")
             log.debug("hostnames resolving to an address is 1.68e-59, making")
             log.debug("it nearly twice as unlikely as an MD5 hash collision.")
@@ -540,7 +550,12 @@ class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
             headers = {'User-Agent': vt[3]}
             test_name = vt[4]
 
-            args = (experiment_url, control_result, control_code, headers, test_name)
+            args = (
+                experiment_url,
+                control_result,
+                control_code,
+                headers,
+                test_name)
 
             if test_name == "MS HTTP Captive Portal":
                 report['result'] = yield compare_content(sm, False, *args)
@@ -652,4 +667,3 @@ class CaptivePortal(httpt.HTTPTest, dnst.DNSTest):
 
         log.msg("")
         log.msg("Captive portal test finished!")
-

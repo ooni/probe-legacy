@@ -10,7 +10,9 @@ from ooni import utils
 from ooni.utils import log
 from ooni.templates import httpt
 
+
 class SquidTest(httpt.HTTPTest):
+
     """
     This test aims at detecting the presence of a squid based transparent HTTP
     proxy. It also tries to detect the version number.
@@ -19,10 +21,11 @@ class SquidTest(httpt.HTTPTest):
     author = "Arturo Filastò"
     version = "0.1"
 
-    optParameters = [['backend', 'b', 'http://ooni.nu/test/', 'Test backend to use']]
+    optParameters = [
+        ['backend', 'b', 'http://ooni.nu/test/', 'Test backend to use']]
 
     #inputFile = ['urls', 'f', None, 'Urls file']
-    inputs =['http://google.com']
+    inputs = ['http://google.com']
 
     requiresRoot = False
     requiresTor = False
@@ -36,13 +39,14 @@ class SquidTest(httpt.HTTPTest):
         version number.
         """
         log.debug("Running")
+
         def process_body(body):
             if "Access Denied." in body:
                 self.report['transparent_http_proxy'] = True
             else:
                 self.report['transparent_http_proxy'] = False
 
-        log.msg("Testing Squid proxy presence by sending a request for "\
+        log.msg("Testing Squid proxy presence by sending a request for "
                 "cache_object")
         headers = {}
         #headers["Host"] = [self.input]
@@ -50,7 +54,7 @@ class SquidTest(httpt.HTTPTest):
         method = "GET"
         body = "cache_object://localhost/info"
         return self.doRequest(self.localOptions['backend'], method=method, body=body,
-                        headers=headers, body_processor=process_body)
+                              headers=headers, body_processor=process_body)
 
     def test_search_bad_request(self):
         """
@@ -62,11 +66,11 @@ class SquidTest(httpt.HTTPTest):
         def process_headers(headers):
             log.debug("Processing headers in test_search_bad_request")
             if 'X-Squid-Error' in headers:
-                log.msg("Detected the presence of a transparent HTTP "\
+                log.msg("Detected the presence of a transparent HTTP "
                         "squid proxy")
                 self.report['trans_http_proxy'] = True
             else:
-                log.msg("Did not detect the presence of transparent HTTP "\
+                log.msg("Did not detect the presence of transparent HTTP "
                         "squid proxy")
                 self.report['transparent_http_proxy'] = False
 
@@ -76,7 +80,7 @@ class SquidTest(httpt.HTTPTest):
         method = utils.randomSTR(10, True)
         self.report['transparent_http_proxy'] = None
         return self.doRequest(self.localOptions['backend'], method=method,
-                        headers=headers, headers_processor=process_headers)
+                              headers=headers, headers_processor=process_headers)
 
     def test_squid_headers(self):
         """
@@ -95,9 +99,9 @@ class SquidTest(httpt.HTTPTest):
                 x-cache-lookup: MISS from cache_server:3128
             """
             squid_headers = {'via': r'.* \((squid.*)\)',
-                        'x-cache': r'MISS from (\w+)',
-                        'x-cache-lookup': r'MISS from (\w+:?\d+?)'
-                        }
+                             'x-cache': r'MISS from (\w+)',
+                             'x-cache-lookup': r'MISS from (\w+:?\d+?)'
+                             }
 
             self.report['transparent_http_proxy'] = False
             for key in squid_headers.keys():
@@ -105,7 +109,7 @@ class SquidTest(httpt.HTTPTest):
                     log.debug("Found %s in headers" % key)
                     m = re.search(squid_headers[key], headers[key])
                     if m:
-                        log.msg("Detected the presence of squid transparent"\
+                        log.msg("Detected the presence of squid transparent"
                                 " HTTP Proxy")
                         self.report['transparent_http_proxy'] = True
 
@@ -115,7 +119,5 @@ class SquidTest(httpt.HTTPTest):
         method = "GET"
         self.report['transparent_http_proxy'] = None
         d = self.doRequest(self.localOptions['backend'], method=method,
-                        headers=headers, headers_processor=process_headers)
+                           headers=headers, headers_processor=process_headers)
         return d
-
-

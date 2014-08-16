@@ -464,7 +464,7 @@ class NetTest(object):
         if not self.summary:
             return
         print "Summary for %s" % self.testDetails['test_name']
-        print "------------" + "-"*len(self.testDetails['test_name'])
+        print "------------" + "-" * len(self.testDetails['test_name'])
         for test_class in self.testClasses:
             test_instance = test_class()
             test_instance.displaySummary(self.summary)

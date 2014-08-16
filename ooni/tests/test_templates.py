@@ -6,6 +6,7 @@ from twisted.trial import unittest
 
 
 class TestHTTPT(unittest.TestCase):
+
     def setUp(self):
         from twisted.web.resource import Resource
         from twisted.web.server import Site

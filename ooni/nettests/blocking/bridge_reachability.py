@@ -50,10 +50,13 @@ class BridgeReachability(nettest.NetTestCase):
         self.timeout = int(self.localOptions['timeout'])
 
         if self.timeout > config.advanced.measurement_timeout:
-            log.err("The measurement timeout is less than the bridge reachability test timeout")
+            log.err(
+                "The measurement timeout is less than the bridge reachability test timeout")
             log.err("Adjust your ooniprobe.conf file by setting the "
                     "advanced: measurement_timeout: value to %d" % self.timeout)
-            raise errors.InvalidConfigFile("advanced->measurement_timeout < %d" % self.timeout)
+            raise errors.InvalidConfigFile(
+                "advanced->measurement_timeout < %d" %
+                self.timeout)
 
         self.report['error'] = None
         self.report['success'] = None
@@ -122,8 +125,8 @@ class BridgeReachability(nettest.NetTestCase):
 
     def test_full_tor_connection(self):
         config = txtorcon.TorConfig()
-        config.ControlPort = random.randint(2**14, 2**16)
-        config.SocksPort = random.randint(2**14, 2**16)
+        config.ControlPort = random.randint(2 ** 14, 2 ** 16)
+        config.SocksPort = random.randint(2 ** 14, 2 ** 16)
         log.msg(
             "Connecting to %s with tor %s" %
             (self.bridge, onion.tor_details['version']))

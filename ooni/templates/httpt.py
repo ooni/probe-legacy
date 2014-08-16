@@ -20,13 +20,14 @@ from ooni.errors import handleAllFailures
 class InvalidSocksProxyOption(Exception):
     pass
 
+
 class StreamListener(StreamListenerMixin):
 
     def __init__(self, request):
         self.request = request
 
     def stream_succeeded(self, stream):
-        host=self.request['url'].split('/')[2]
+        host = self.request['url'].split('/')[2]
         try:
             if stream.target_host == host and len(self.request['tor']) == 1:
                 self.request['tor']['exit_ip'] = stream.circuit.path[-1].ip
@@ -35,7 +36,9 @@ class StreamListener(StreamListenerMixin):
         except:
             log.err("Tor Exit ip detection failed")
 
+
 class HTTPTest(NetTestCase):
+
     """
     A utility class for dealing with HTTP based testing. It provides methods to
     be overriden for dealing with HTTP based testing.
@@ -56,7 +59,7 @@ class HTTPTest(NetTestCase):
     followRedirects = False
 
     baseParameters = [['socksproxy', 's', None,
-        'Specify a socks proxy to use for requests (ip:port)']]
+                       'Specify a socks proxy to use for requests (ip:port)']]
 
     def _setUp(self):
         super(HTTPTest, self)._setUp()
@@ -65,24 +68,25 @@ class HTTPTest(NetTestCase):
             import OpenSSL
         except:
             log.err("Warning! pyOpenSSL is not installed. https websites will "
-                     "not work")
+                    "not work")
 
         self.control_agent = TrueHeadersSOCKS5Agent(reactor,
-                proxyEndpoint=TCP4ClientEndpoint(reactor, '127.0.0.1',
-                    config.tor.socks_port))
+                                                    proxyEndpoint=TCP4ClientEndpoint(reactor, '127.0.0.1',
+                                                                                     config.tor.socks_port))
 
         self.report['socksproxy'] = None
         sockshost, socksport = (None, None)
         if self.localOptions['socksproxy']:
             try:
-                sockshost, socksport = self.localOptions['socksproxy'].split(':')
+                sockshost, socksport = self.localOptions[
+                    'socksproxy'].split(':')
                 self.report['socksproxy'] = self.localOptions['socksproxy']
             except ValueError:
                 raise InvalidSocksProxyOption
             socksport = int(socksport)
             self.agent = TrueHeadersSOCKS5Agent(reactor,
-                proxyEndpoint=TCP4ClientEndpoint(reactor, sockshost,
-                    socksport))
+                                                proxyEndpoint=TCP4ClientEndpoint(reactor, sockshost,
+                                                                                 socksport))
         else:
             self.agent = TrueHeadersAgent(reactor)
 
@@ -95,8 +99,8 @@ class HTTPTest(NetTestCase):
                 self.agent = RedirectAgent(self.agent)
                 self.report['agent'] = 'redirect'
             except:
-                log.err("Warning! You are running an old version of twisted"\
-                        "(<= 10.1). I will not be able to follow redirects."\
+                log.err("Warning! You are running an old version of twisted"
+                        "(<= 10.1). I will not be able to follow redirects."
                         "This may make the testing less precise.")
 
         self.processInputs()
@@ -109,7 +113,8 @@ class HTTPTest(NetTestCase):
     def processInputs(self):
         pass
 
-    def addToReport(self, request, response=None, response_body=None, failure_string=None):
+    def addToReport(
+            self, request, response=None, response_body=None, failure_string=None):
         """
         Adds to the report the specified request and response.
 
@@ -138,13 +143,14 @@ class HTTPTest(NetTestCase):
                 'headers': list(response.headers.getAllRawHeaders()),
                 'body': response_body,
                 'code': response.code
-        }
+            }
         if failure_string:
             request_response['failure'] = failure_string
 
         self.report['requests'].append(request_response)
 
-    def _processResponseBody(self, response_body, request, response, body_processor):
+    def _processResponseBody(
+            self, response_body, request, response, body_processor):
         log.debug("Processing response body")
         HTTPTest.addToReport(self, request, response, response_body)
         if body_processor:
@@ -200,7 +206,7 @@ class HTTPTest(NetTestCase):
         pass
 
     def _cbResponse(self, response, request,
-            headers_processor, body_processor):
+                    headers_processor, body_processor):
         """
         This callback is fired once we have gotten a response for our request.
         If we are using a RedirectAgent then this will fire once we have
@@ -240,14 +246,15 @@ class HTTPTest(NetTestCase):
             self.processResponseHeaders(response_headers_dict)
 
         try:
-            content_length = int(response.headers.getRawHeaders('content-length')[0])
+            content_length = int(
+                response.headers.getRawHeaders('content-length')[0])
         except Exception:
             content_length = None
 
         finished = defer.Deferred()
         response.deliverBody(BodyReceiver(finished, content_length))
         finished.addCallback(self._processResponseBody, request,
-                response, body_processor)
+                             response, body_processor)
         finished.addErrback(self._processResponseBodyFail, request,
                             response)
         return finished
@@ -293,7 +300,9 @@ class HTTPTest(NetTestCase):
             agent = self.agent
 
         if self.localOptions['socksproxy']:
-            log.debug("Using SOCKS proxy %s for request" % (self.localOptions['socksproxy']))
+            log.debug(
+                "Using SOCKS proxy %s for request" %
+                (self.localOptions['socksproxy']))
 
         log.debug("Performing request %s %s %s" % (url, method, headers))
 
@@ -326,7 +335,9 @@ class HTTPTest(NetTestCase):
 
         def errback(failure, request):
             if request['tor']['is_tor']:
-                log.err("Error performing torified request: %s" % request['url'])
+                log.err(
+                    "Error performing torified request: %s" %
+                    request['url'])
             else:
                 log.err("Error performing request: %s" % request['url'])
             failure_string = handleAllFailures(failure)
@@ -339,8 +350,8 @@ class HTTPTest(NetTestCase):
                 state.add_stream_listener(StreamListener(request))
 
         d = agent.request(request['method'], request['url'], headers,
-                body_producer)
+                          body_producer)
         d.addErrback(errback, request)
         d.addCallback(self._cbResponse, request, headers_processor,
-                body_processor)
+                      body_processor)
         return d

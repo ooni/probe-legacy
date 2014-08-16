@@ -21,11 +21,11 @@
   @copyright: © 2013 Isis Lovecruft, The Tor Project Inc.
 """
 
-from socket import error   as socket_error
+from socket import error as socket_error
 from socket import timeout as socket_timeout
 from socket import inet_aton as socket_inet_aton
 from socket import gethostbyname as socket_gethostbyname
-from time   import sleep
+from time import sleep
 
 import os
 import socket
@@ -36,21 +36,21 @@ import types
 import ipaddr
 import OpenSSL
 
-from OpenSSL                import SSL, crypto
-from twisted.internet       import defer, threads
-from twisted.python         import usage, failure
+from OpenSSL import SSL, crypto
+from twisted.internet import defer, threads
+from twisted.python import usage, failure
 
-from ooni       import nettest
+from ooni import nettest
 from ooni.utils import log
 from ooni.errors import InsufficientPrivileges
 from ooni.settings import config
 
-## For a way to obtain the current version of Firefox's default ciphersuite
-## list, see https://trac.torproject.org/projects/tor/attachment/ticket/4744/
-## and the attached file "get_mozilla_files.py".
+# For a way to obtain the current version of Firefox's default ciphersuite
+# list, see https://trac.torproject.org/projects/tor/attachment/ticket/4744/
+# and the attached file "get_mozilla_files.py".
 ##
-## Note, however, that doing so requires the source code to the version of
-## firefox that you wish to emulate.
+# Note, however, that doing so requires the source code to the version of
+# firefox that you wish to emulate.
 
 firefox_ciphers = ["ECDHE-ECDSA-AES256-SHA",
                    "ECDHE-RSA-AES256-SHA",
@@ -67,10 +67,11 @@ firefox_ciphers = ["ECDHE-ECDSA-AES256-SHA",
                    "ECDHE-RSA-RC4-SHA",
                    "ECDHE-RSA-AES128-SHA",
                    "DHE-RSA-CAMELLIA128-SHA",
-                   "DHE-DSS-CAMELLIA128-SHA",]
+                   "DHE-DSS-CAMELLIA128-SHA", ]
 
 
 class SSLContextError(usage.UsageError):
+
     """Raised when we're missing the SSL context method, or incompatible
     contexts were provided. The SSL context method should be one of the
     following:
@@ -103,15 +104,21 @@ class SSLContextError(usage.UsageError):
             message = self.errors[message]
         super(usage.UsageError, self).__init__(message)
 
+
 class HostUnreachableError(Exception):
+
     """Raised when the host IP address appears to be unreachable."""
     pass
 
+
 class HostUnresolveableError(Exception):
+
     """Raised when the host address appears to be unresolveable."""
     pass
 
+
 class ConnectionTimeout(Exception):
+
     """Raised when we receive a :class:`socket.timeout <timeout>`, in order to
     pass the Exception along to
     :func:`TLSHandshakeTest.test_handshake.connectionFailed
@@ -119,31 +126,35 @@ class ConnectionTimeout(Exception):
     """
     pass
 
+
 class HandshakeOptions(usage.Options):
+
     """ :class:`usage.Options <Options>` parser for the tls-handshake test."""
     optParameters = [
         ['host', 'h', None,
          'Remote host IP address (v4/v6) and port, i.e. "1.2.3.4:443"'],
         ['port', 'p', None,
          'Use this port for all hosts, regardless of port specified in file'],
-        ['ciphersuite', 'c', None ,
-         'File containing ciphersuite list, one per line'],]
+        ['ciphersuite', 'c', None,
+         'File containing ciphersuite list, one per line'], ]
     optFlags = [
         ['ssl2', '2', 'Use SSLv2'],
         ['ssl3', '3', 'Use SSLv3'],
-        ['tls1', 't', 'Use TLSv1'],]
+        ['tls1', 't', 'Use TLSv1'], ]
+
 
 class HandshakeTest(nettest.NetTestCase):
+
     """An ooniprobe NetTestCase for determining if we can complete a TLS/SSL
     handshake with a remote host.
     """
-    name         = 'tls-handshake'
-    author       = 'Isis Lovecruft <isis@torproject.org>'
-    description  = 'A test to determing if we can complete a TLS hankshake.'
-    version      = '0.0.3'
+    name = 'tls-handshake'
+    author = 'Isis Lovecruft <isis@torproject.org>'
+    description = 'A test to determing if we can complete a TLS hankshake.'
+    version = '0.0.3'
 
     requiresRoot = False
-    requiresTor  = False
+    requiresTor = False
     usageOptions = HandshakeOptions
 
     host = None
@@ -160,23 +171,28 @@ class HandshakeTest(nettest.NetTestCase):
         if self.localOptions:
             options = self.localOptions
 
-            ## check that we're testing an IP:PORT, else exit gracefully:
-            if not (options['host']  or options['file']):
+            # check that we're testing an IP:PORT, else exit gracefully:
+            if not (options['host'] or options['file']):
                 raise SystemExit("Need --host or --file!")
             if options['host']:
                 self.host = options['host']
 
-            ## If no context was chosen, explain our default to the user:
+            # If no context was chosen, explain our default to the user:
             if not (options['ssl2'] or options['ssl3'] or options['tls1']):
-                try: raise SSLContextError('NO_CONTEXT')
-                except SSLContextError as sce: log.err(sce.message)
+                try:
+                    raise SSLContextError('NO_CONTEXT')
+                except SSLContextError as sce:
+                    log.err(sce.message)
                 context = None
             else:
-                ## If incompatible contexts were chosen, inform the user:
+                # If incompatible contexts were chosen, inform the user:
                 if options['tls1'] and (options['ssl2'] or options['ssl3']):
-                    try: raise SSLContextError('INCOMPATIBLE')
-                    except SSLContextError as sce: log.err(sce.message)
-                    finally: log.msg('Defaulting to testing only TLSv1.')
+                    try:
+                        raise SSLContextError('INCOMPATIBLE')
+                    except SSLContextError as sce:
+                        log.err(sce.message)
+                    finally:
+                        log.msg('Defaulting to testing only TLSv1.')
                 elif options['ssl2']:
                     try:
                         if not options['ssl3']:
@@ -185,18 +201,20 @@ class HandshakeTest(nettest.NetTestCase):
                             context = SSL.Context(SSL.SSLv23_METHOD)
                     except ValueError as ve:
                         log.err(ve.message)
-                        try: raise SSLContextError('MISSING_SSLV2')
+                        try:
+                            raise SSLContextError('MISSING_SSLV2')
                         except SSLContextError as sce:
                             log.err(sce.message)
                             log.msg("Falling back to testing only TLSv1.")
                             context = SSL.Context(SSL.TLSv1_METHOD)
                 elif options['ssl3']:
                     context = SSL.Context(SSL.SSLv3_METHOD)
-            ## finally, reset the context if the user's choice was okay:
-            if context: self.context = context
+            # finally, reset the context if the user's choice was okay:
+            if context:
+                self.context = context
 
-            ## if we weren't given a file with a list of ciphersuites to use,
-            ## then use the firefox default list:
+            # if we weren't given a file with a list of ciphersuites to use,
+            # then use the firefox default list:
             if not options['ciphersuite']:
                 self.ciphers = firefox_ciphers
                 log.msg('Using default Firefox ciphersuite list.')
@@ -212,21 +230,22 @@ class HandshakeTest(nettest.NetTestCase):
         if getattr(config.advanced, 'default_timeout', None) is not None:
             self.timeout = config.advanced.default_timeout
         else:
-            self.timeout = 30   ## default the timeout to 30 seconds
+            self.timeout = 30  # default the timeout to 30 seconds
 
-        ## xxx For debugging, set the socket timeout higher anyway:
+        # xxx For debugging, set the socket timeout higher anyway:
         self.timeout = 30
 
-        ## We have to set the default timeout on our sockets before creation:
+        # We have to set the default timeout on our sockets before creation:
         socket.setdefaulttimeout(self.timeout)
-    def isIP(self,addr):
+
+    def isIP(self, addr):
         try:
             socket_inet_aton(addr)
             return True
         except socket_error:
             return False
 
-    def resolveHost(self,addr):
+    def resolveHost(self, addr):
         try:
             return socket_gethostbyname(addr)
         except socket_error:
@@ -235,9 +254,9 @@ class HandshakeTest(nettest.NetTestCase):
     def splitInput(self, input):
         addr, port = input.strip().rsplit(':', 1)
 
-        #if addr is hostname it is resolved to ip
+        # if addr is hostname it is resolved to ip
         if not self.isIP(addr):
-            addr=self.resolveHost(addr)
+            addr = self.resolveHost(addr)
 
         if self.localOptions['port']:
             port = self.localOptions['port']
@@ -258,7 +277,7 @@ class HandshakeTest(nettest.NetTestCase):
 
     def buildSocket(self, addr):
         global s
-        ip = ipaddr.IPAddress(addr) ## learn if we're IPv4 or IPv6
+        ip = ipaddr.IPAddress(addr)  # learn if we're IPv4 or IPv6
         if ip.version == 4:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         elif ip.version == 6:
@@ -357,12 +376,12 @@ class HandshakeTest(nettest.NetTestCase):
             context = self.getContext()
             connection = SSL.Connection(context, sckt)
             try:
-               connection.connect(host)
+                connection.connect(host)
             except socket_timeout as stmo:
-               error = ConnectionTimeout(stmo.message)
-               return failure.Failure(error)
+                error = ConnectionTimeout(stmo.message)
+                return failure.Failure(error)
             else:
-               return connection
+                return connection
 
         def connectionFailed(connection, host):
             """Handle errors raised while attempting to create the socket and
@@ -382,8 +401,8 @@ class HandshakeTest(nettest.NetTestCase):
 
             if not isinstance(connection, SSL.Connection):
                 if isinstance(connection, IOError):
-                    ## On some *nix distros, /dev/random is 0600 root:root and
-                    ## we get a permissions error when trying to read
+                    # On some *nix distros, /dev/random is 0600 root:root and
+                    # we get a permissions error when trying to read
                     if connection.message.find("[Errno 13]"):
                         raise InsufficientPrivileges(
                             "%s" % connection.message.split("[Errno 13]", 1)[1])
@@ -396,7 +415,9 @@ class HandshakeTest(nettest.NetTestCase):
                     log.err("Connection failed with reason: %s"
                             % connection.message)
                 else:
-                    log.err("Connection failed with reason: %s" % str(connection))
+                    log.err(
+                        "Connection failed with reason: %s" %
+                        str(connection))
 
             self.report['host'] = addr
             self.report['port'] = port
@@ -414,22 +435,28 @@ class HandshakeTest(nettest.NetTestCase):
                 ('1.1.1.1',443)
             """
 
-            ## xxx TODO to get this to work with a non-blocking socket, see how
-            ##     twisted.internet.tcp.Client handles socket objects.
+            # xxx TODO to get this to work with a non-blocking socket, see how
+            # twisted.internet.tcp.Client handles socket objects.
             connection.setblocking(1)
 
-            ## Set the timeout on the connection:
+            # Set the timeout on the connection:
             ##
-            ## We want to set SO_RCVTIMEO and SO_SNDTIMEO, which both are
-            ## defined in the socket option definitions in <sys/socket.h>, and
-            ## which both take as their value, according to socket(7), a
-            ## struct timeval, which is defined in the libc manual:
-            ## https://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
+            # We want to set SO_RCVTIMEO and SO_SNDTIMEO, which both are
+            # defined in the socket option definitions in <sys/socket.h>, and
+            # which both take as their value, according to socket(7), a
+            # struct timeval, which is defined in the libc manual:
+            # https://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html
             timeval = struct.pack('ll', int(timeout), 0)
-            connection.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, timeval)
-            connection.setsockopt(socket.SOL_SOCKET, socket.SO_SNDTIMEO, timeval)
+            connection.setsockopt(
+                socket.SOL_SOCKET,
+                socket.SO_RCVTIMEO,
+                timeval)
+            connection.setsockopt(
+                socket.SOL_SOCKET,
+                socket.SO_SNDTIMEO,
+                timeval)
 
-            ## Set the connection state to client mode:
+            # Set the connection state to client mode:
             connection.set_connect_state()
 
             peer_name, peer_port = connection.getpeername()
@@ -466,10 +493,10 @@ class HandshakeTest(nettest.NetTestCase):
                         sleep(1)
                     else:
                         log.msg("Renegotiation with %s complete!" % host)
-                except SSL.WantReadError, wre:
+                except SSL.WantReadError as wre:
                     connection = handleWantRead(connection)
                     log.debug("State: %s" % connection.state_string())
-                except SSL.WantWriteError, wwe:
+                except SSL.WantWriteError as wwe:
                     connection = handleWantWrite(connection)
                     log.debug("State: %s" % connection.state_string())
             return connection
@@ -503,16 +530,19 @@ class HandshakeTest(nettest.NetTestCase):
             peername, peerport = host
 
             if isinstance(connection, SSL.Connection):
-                log.msg("Closing connection to %s:%d..." % (peername, peerport))
+                log.msg(
+                    "Closing connection to %s:%d..." %
+                    (peername, peerport))
                 while not connection.shutdown():
-                    ## if the connection is halfway shutdown, we have to
-                    ## wait for a ZeroReturnError on connection.recv():
+                    # if the connection is halfway shutdown, we have to
+                    # wait for a ZeroReturnError on connection.recv():
                     if (bin(connection.get_shutdown()) == '0b01') \
                             or (bin(connection.get_shutdown()) == '0b10'):
                         try:
                             _read_buffer = connection.pending()
                             connection.recv(_read_buffer)
-                        except SSL.ZeroReturnError, zre: continue
+                        except SSL.ZeroReturnError as zre:
+                            continue
                     else:
                         sleep(1)
                 else:
@@ -596,7 +626,7 @@ class HandshakeTest(nettest.NetTestCase):
                     log.debug("Connection to %s:%s DOES NOT HAVE want_read"
                               % (peername, peerport))
                     log.debug("State: %s" % connection.state_string())
-            except SSL.WantWriteError, wwe:
+            except SSL.WantWriteError as wwe:
                 self.state = connection.state_string()
                 log.debug("Got WantWriteError while handling want_read")
                 log.debug("WantWriteError: %s" % wwe.message)
@@ -614,7 +644,7 @@ class HandshakeTest(nettest.NetTestCase):
                     resent = connection.send("o\r\n")
                     log.debug("Sent: %d" % resent)
                     log.debug("State: %s" % connection.state_string())
-            except SSL.WantReadError, wre:
+            except SSL.WantReadError as wre:
                 self.state = connection.state_string()
                 log.debug("Got WantReadError while handling want_write")
                 log.debug("WantReadError: %s" % wre.message)
@@ -657,18 +687,20 @@ class HandshakeTest(nettest.NetTestCase):
             except OpenSSL.SSL.WantReadError() as wre:
                 self.state = connection.state_string()
                 log.debug("Handshake state: %s" % self.state)
-                log.debug("doHandshake: WantReadError on first handshake attempt.")
+                log.debug(
+                    "doHandshake: WantReadError on first handshake attempt.")
                 connection = handleWantRead(connection)
             except OpenSSL.SSL.WantWriteError() as wwe:
                 self.state = connection.state_string()
                 log.debug("Handshake state: %s" % self.state)
-                log.debug("doHandshake: WantWriteError on first handshake attempt.")
+                log.debug(
+                    "doHandshake: WantWriteError on first handshake attempt.")
                 connection = handleWantWrite(connection)
             else:
                 self.state = connection.state_string()
 
             if self.state == 'SSL negotiation finished successfully':
-                ## jump to handshakeSuccessful and get certchain
+                # jump to handshakeSuccessful and get certchain
                 return connection
             else:
                 sent = connection.send("o\r\n")
@@ -681,18 +713,18 @@ class HandshakeTest(nettest.NetTestCase):
 
                 try:
                     received = connection.recv(int(_read_buffer))
-                except SSL.WantReadError, wre:
+                except SSL.WantReadError as wre:
                     if connection.want_read():
                         self.state = connection.state_string()
                         connection = handleWantRead(connection)
                     else:
-                        ## if we still have an SSL_ERROR_WANT_READ, then try to
-                        ## renegotiate
+                        # if we still have an SSL_ERROR_WANT_READ, then try to
+                        # renegotiate
                         self.state = connection.state_string()
                         connection = connectionRenegotiate(connection,
                                                            connection.getpeername(),
                                                            wre.message)
-                except SSL.WantWriteError, wwe:
+                except SSL.WantWriteError as wwe:
                     self.state = connection.state_string()
                     log.debug("Handshake state: %s" % self.state)
                     if connection.want_write():
@@ -728,18 +760,18 @@ class HandshakeTest(nettest.NetTestCase):
             server_cert_chain = self.getPeerCert(connection, get_chain=True)
 
             renegotiations = connection.total_renegotiations()
-            cipher_list    = connection.get_cipher_list()
-            session_key    = connection.master_key()
-            rawcert        = connection.get_peer_certificate()
-            ## xxx TODO this hash needs to be formatted as SHA1, not long
+            cipher_list = connection.get_cipher_list()
+            session_key = connection.master_key()
+            rawcert = connection.get_peer_certificate()
+            # xxx TODO this hash needs to be formatted as SHA1, not long
             cert_subj_hash = rawcert.subject_name_hash()
-            cert_serial    = rawcert.get_serial_number()
-            cert_sig_algo  = rawcert.get_signature_algorithm()
-            cert_subject   = self.getX509Name(rawcert.get_subject(),
-                                              get_components=True)
-            cert_issuer    = self.getX509Name(rawcert.get_issuer(),
-                                              get_components=True)
-            cert_pubkey    = self.getPublicKey(rawcert.get_pubkey())
+            cert_serial = rawcert.get_serial_number()
+            cert_sig_algo = rawcert.get_signature_algorithm()
+            cert_subject = self.getX509Name(rawcert.get_subject(),
+                                            get_components=True)
+            cert_issuer = self.getX509Name(rawcert.get_issuer(),
+                                           get_components=True)
+            cert_pubkey = self.getPublicKey(rawcert.get_pubkey())
 
             self.report['host'] = host
             self.report['port'] = port
@@ -755,12 +787,12 @@ class HandshakeTest(nettest.NetTestCase):
             self.report['cert_public_key'] = cert_pubkey
             self.report['cert_serial_no'] = cert_serial
             self.report['cert_sig_algo'] = cert_sig_algo
-            ## The session's master key is only valid for that session, and
-            ## will allow us to decrypt any packet captures (if they were
-            ## collected). Because we are not requesting URLs, only host:port
-            ## (which would be visible in pcaps anyway, since the FQDN is
-            ## never encrypted) I do not see a way for this to log any user or
-            ## identifying information. Correct me if I'm wrong.
+            # The session's master key is only valid for that session, and
+            # will allow us to decrypt any packet captures (if they were
+            # collected). Because we are not requesting URLs, only host:port
+            # (which would be visible in pcaps anyway, since the FQDN is
+            # never encrypted) I do not see a way for this to log any user or
+            # identifying information. Correct me if I'm wrong.
             self.report['session_key'] = session_key
 
             log.msg("Server certificate:\n\n%s" % server_cert)
@@ -797,7 +829,9 @@ class HandshakeTest(nettest.NetTestCase):
 
             if isinstance(connection, Exception) \
                     or isinstance(connection, ConnectionTimeout):
-                log.msg("Handshake failed with reason: %s" % connection.message)
+                log.msg(
+                    "Handshake failed with reason: %s" %
+                    connection.message)
                 self.report['state'] = connection.message
             elif isinstance(connection, failure.Failure):
                 log.msg("Handshake failed with reason: Socket %s"

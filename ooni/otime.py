@@ -1,11 +1,13 @@
 import time
 from datetime import datetime
 
+
 def utcDateNow():
     """
     Returns the datetime object of the current UTC time.
     """
     return datetime.utcnow()
+
 
 def utcTimeNow():
     """
@@ -13,11 +15,13 @@ def utcTimeNow():
     """
     return time.mktime(time.gmtime())
 
+
 def dateToTime(date):
     """
     Takes as input a datetime object and outputs the seconds since epoch.
     """
     return time.mktime(date.timetuple())
+
 
 def prettyDateNow():
     """
@@ -25,17 +29,21 @@ def prettyDateNow():
     """
     return datetime.now().ctime()
 
+
 def utcPrettyDateNow():
     """
     Returns a good looking string for utc time.
     """
     return datetime.utcnow().ctime()
 
+
 def timeToPrettyDate(time_val):
     return time.ctime(time_val)
 
+
 class InvalidTimestampFormat(Exception):
     pass
+
 
 def fromTimestamp(s):
     """
@@ -57,7 +65,8 @@ def fromTimestamp(s):
         raise InvalidTimestampFormat(s)
 
     return datetime(int(year), int(month), int(day), int(hours), int(minutes),
-            int(seconds))
+                    int(seconds))
+
 
 def timestamp(t=None):
     """
@@ -86,6 +95,7 @@ def timestamp(t=None):
         t = datetime.utcnow()
     ISO8601 = "%Y-%m-%dT%H%M%SZ"
     return t.strftime(ISO8601)
+
 
 def epochToTimestamp(seconds):
     return timestamp(datetime.utcfromtimestamp(seconds))

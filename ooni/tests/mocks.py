@@ -7,6 +7,7 @@ from ooni.managers import TaskManager
 
 
 class MockMeasurementFailOnce(BaseTask):
+
     def run(self):
         f = open('dummyTaskFailOnce.txt', 'w')
         f.write('fail')
@@ -18,6 +19,7 @@ class MockMeasurementFailOnce(BaseTask):
 
 
 class MockMeasurementManager(TaskManager):
+
     def __init__(self):
         self.successes = []
         TaskManager.__init__(self)
@@ -30,6 +32,7 @@ class MockMeasurementManager(TaskManager):
 
 
 class MockReporter(object):
+
     def __init__(self):
         self.created = defer.Deferred()
 
@@ -46,21 +49,24 @@ class MockReporter(object):
 class MockFailure(Exception):
     pass
 
-# # from test_managers
+# from test_managers
 mockFailure = failure.Failure(MockFailure('mock'))
 
 
 class MockSuccessTask(BaseTask):
+
     def run(self):
         return defer.succeed(42)
 
 
 class MockFailTask(BaseTask):
+
     def run(self):
         return defer.fail(mockFailure)
 
 
 class MockFailOnceTask(BaseTask):
+
     def run(self):
         if self.failures >= 1:
             return defer.succeed(42)
@@ -69,16 +75,19 @@ class MockFailOnceTask(BaseTask):
 
 
 class MockSuccessTaskWithTimeout(TaskWithTimeout):
+
     def run(self):
         return defer.succeed(42)
 
 
 class MockFailTaskThatTimesOut(TaskWithTimeout):
+
     def run(self):
         return defer.Deferred()
 
 
 class MockTimeoutOnceTask(TaskWithTimeout):
+
     def run(self):
         if self.failures >= 1:
             return defer.succeed(42)
@@ -87,11 +96,13 @@ class MockTimeoutOnceTask(TaskWithTimeout):
 
 
 class MockFailTaskWithTimeout(TaskWithTimeout):
+
     def run(self):
         return defer.fail(mockFailure)
 
 
 class MockNetTest(object):
+
     def __init__(self):
         self.successes = []
 
@@ -100,6 +111,7 @@ class MockNetTest(object):
 
 
 class MockMeasurement(TaskWithTimeout):
+
     def __init__(self, net_test):
         TaskWithTimeout.__init__(self)
         self.netTest = net_test
@@ -109,16 +121,19 @@ class MockMeasurement(TaskWithTimeout):
 
 
 class MockSuccessMeasurement(MockMeasurement):
+
     def run(self):
         return defer.succeed(42)
 
 
 class MockFailMeasurement(MockMeasurement):
+
     def run(self):
         return defer.fail(mockFailure)
 
 
 class MockFailOnceMeasurement(MockMeasurement):
+
     def run(self):
         if self.failures >= 1:
             return defer.succeed(42)
@@ -127,6 +142,7 @@ class MockFailOnceMeasurement(MockMeasurement):
 
 
 class MockDirector(object):
+
     def __init__(self):
         self.successes = []
 
@@ -137,8 +153,9 @@ class MockDirector(object):
         self.successes.append(measurement)
 
 
-## from test_reporter.py
+# from test_reporter.py
 class MockOReporter(object):
+
     def __init__(self):
         self.created = defer.Deferred()
 
@@ -156,16 +173,19 @@ class MockOReporter(object):
 
 
 class MockOReporterThatFailsWrite(MockOReporter):
+
     def writeReportEntry(self, entry):
         raise MockFailure
 
 
 class MockOReporterThatFailsOpen(MockOReporter):
+
     def createReport(self):
         raise MockFailure
 
 
 class MockOReporterThatFailsWriteOnce(MockOReporter):
+
     def __init__(self):
         self.failure = 0
         MockOReporter.__init__(self)
@@ -179,6 +199,7 @@ class MockOReporterThatFailsWriteOnce(MockOReporter):
 
 
 class MockTaskManager(TaskManager):
+
     def __init__(self):
         self.successes = []
         TaskManager.__init__(self)
@@ -191,6 +212,7 @@ class MockTaskManager(TaskManager):
 
 
 class MockOONIBClient(object):
+
     def lookupTestHelpers(self, required_test_helpers):
         ret = {
             'default': {

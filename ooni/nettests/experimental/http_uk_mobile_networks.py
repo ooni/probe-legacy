@@ -7,17 +7,21 @@ from twisted.plugin import IPlugin
 from ooni.templates import httpt
 from ooni.utils import log
 
+
 class UsageOptions(usage.Options):
+
     """
-    See https://github.com/hellais/ooni-inputs/processed/uk_mobile_networks_redirects.yaml 
+    See https://github.com/hellais/ooni-inputs/processed/uk_mobile_networks_redirects.yaml
     to see how the rules file should look like.
     """
     optParameters = [
-                     ['rules', 'y', None, 
-                    'Specify the redirect rules file ']
-                    ]
+        ['rules', 'y', None,
+         'Specify the redirect rules file ']
+    ]
+
 
 class HTTPUKMobileNetworksTest(httpt.HTTPTest):
+
     """
     This test was thought of by Open Rights Group and implemented with the
     purpose of detecting censorship in the UK.
@@ -31,7 +35,11 @@ class HTTPUKMobileNetworksTest(httpt.HTTPTest):
 
     followRedirects = True
 
-    inputFile = ['urls', 'f', None, 'List of urls one per line to test for censorship']
+    inputFile = [
+        'urls',
+        'f',
+        None,
+        'List of urls one per line to test for censorship']
     requiredOptions = ['urls']
     requiresRoot = False
     requiresTor = False
@@ -51,9 +59,12 @@ class HTTPUKMobileNetworksTest(httpt.HTTPTest):
     def testPatterns(self, patterns, location):
         test_result = False
 
-        if type(patterns) == list:
+        if isinstance(patterns, list):
             for pattern in patterns:
-                test_result |= self.testPattern(location, pattern['value'], pattern['type'])
+                test_result |= self.testPattern(
+                    location,
+                    pattern['value'],
+                    pattern['type'])
         rules_file = self.localOptions['rules']
 
         return test_result
@@ -65,7 +76,9 @@ class HTTPUKMobileNetworksTest(httpt.HTTPTest):
             current_rule = {}
             current_rule['name'] = value['name']
             current_rule['patterns'] = value['patterns']
-            current_rule['test'] = self.testPatterns(value['patterns'], location)
+            current_rule['test'] = self.testPatterns(
+                value['patterns'],
+                location)
             blocked |= current_rule['test']
             result[rule] = current_rule
         result['blocked'] = blocked

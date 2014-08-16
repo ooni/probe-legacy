@@ -17,6 +17,7 @@ from twisted.internet.endpoints import TCP4ClientEndpoint
 
 
 class Director(object):
+
     """
     Singleton object responsible for coordinating the Measurements Manager
     and the Reporting Manager.
@@ -135,10 +136,14 @@ class Director(object):
         if config.global_options['no-geoip']:
             aux = [False]
             if config.global_options.get('annotations') is not None:
-                annotations = [k.lower() for k in config.global_options['annotations'].keys()]
-                aux = map(lambda x: x in annotations, ["city", "country", "asn"])
+                annotations = [
+                    k.lower() for k in config.global_options['annotations'].keys()]
+                aux = map(
+                    lambda x: x in annotations, [
+                        "city", "country", "asn"])
             if not all(aux):
-                log.msg("You should add annotations for the country, city and ASN")
+                log.msg(
+                    "You should add annotations for the country, city and ASN")
         else:
             yield config.probe_ip.lookup()
 
@@ -274,10 +279,16 @@ class Director(object):
             prefix = 'report'
         else:
             prefix = config.reports.pcap
-        filename = config.global_options['reportfile'] if 'reportfile' in config.global_options.keys() else None
-        filename_pcap = generate_filename(testDetails, filename=filename, prefix=prefix, extension='pcap')
+        filename = config.global_options[
+            'reportfile'] if 'reportfile' in config.global_options.keys() else None
+        filename_pcap = generate_filename(
+            testDetails,
+            filename=filename,
+            prefix=prefix,
+            extension='pcap')
         if len(self.sniffers) > 0:
-            pcap_filenames = set(sniffer.pcapwriter.filename for sniffer in self.sniffers.values())
+            pcap_filenames = set(
+                sniffer.pcapwriter.filename for sniffer in self.sniffers.values())
             pcap_filenames.add(filename_pcap)
             log.msg("pcap files %s can be messed up because several netTests are being executed in parallel." %
                     ','.join(pcap_filenames))

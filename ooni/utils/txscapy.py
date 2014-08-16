@@ -50,7 +50,9 @@ def pcapdnet_installed():
         config.pcap_dnet = True
 
     except ImportError as e:
-        log.err(e.message + ". Pypcap or dnet are not properly installed. Certain tests may not work.")
+        log.err(
+            e.message +
+            ". Pypcap or dnet are not properly installed. Certain tests may not work.")
         config.pcap_dnet = False
         conf.use_pcap = False
         conf.use_dnet = False
@@ -73,8 +75,10 @@ if pcapdnet_installed():
 else:
 
     class DummyPcapWriter:
+
         def __init__(self, pcap_filename, *arg, **kw):
-            log.err("Initializing DummyPcapWriter. We will not actually write to a pcapfile")
+            log.err(
+                "Initializing DummyPcapWriter. We will not actually write to a pcapfile")
 
         @staticmethod
         def write(self):
@@ -90,13 +94,14 @@ def getNetworksFromRoutes():
     from scapy.all import conf, ltoa, read_routes
     from ipaddr import IPNetwork, IPAddress
 
-    # # Hide the 'no routes' warnings
+    # Hide the 'no routes' warnings
     conf.verb = 0
 
     networks = []
     for nw, nm, gw, iface, addr in read_routes():
         n = IPNetwork(ltoa(nw))
-        (n.netmask, n.gateway, n.ipaddr) = [IPAddress(x) for x in [nm, gw, addr]]
+        (n.netmask, n.gateway, n.ipaddr) = [
+            IPAddress(x) for x in [nm, gw, addr]]
         n.iface = iface
         if not n.compressed in networks:
             networks.append(n)
@@ -148,6 +153,7 @@ class ProtocolAlreadyRegistered(Exception):
 
 
 class ScapyFactory(abstract.FileDescriptor):
+
     """
     Inspired by muxTCP scapyLink:
     https://github.com/enki/muXTCP/blob/master/scapyLink.py
@@ -159,7 +165,10 @@ class ScapyFactory(abstract.FileDescriptor):
         if interface == 'auto':
             interface = getDefaultIface()
         if not super_socket and sys.platform == 'darwin':
-            super_socket = conf.L3socket(iface=interface, promisc=True, filter='')
+            super_socket = conf.L3socket(
+                iface=interface,
+                promisc=True,
+                filter='')
         elif not super_socket:
             super_socket = L3RawSocket(iface=interface, promisc=True)
 
@@ -207,6 +216,7 @@ class ScapyFactory(abstract.FileDescriptor):
         else:
             raise ProtocolNotRegistered
 
+
 class ScapyProtocol(object):
     factory = None
 
@@ -251,7 +261,8 @@ class ScapySender(ScapyProtocol):
             self.stopSending()
             return
 
-        if self.expected_answers and self.expected_answers == len(self.answered_packets):
+        if self.expected_answers and self.expected_answers == len(
+                self.answered_packets):
             log.debug("Got the number of expected answers")
             self.stopSending()
 
@@ -303,6 +314,7 @@ class ScapySender(ScapyProtocol):
 
 
 class ScapySniffer(ScapyProtocol):
+
     def __init__(self, pcap_filename, *arg, **kw):
         self.pcapwriter = PcapWriter(pcap_filename, *arg, **kw)
 
@@ -314,6 +326,7 @@ class ScapySniffer(ScapyProtocol):
 
 
 class ParasiticTraceroute(ScapyProtocol):
+
     def __init__(self):
         self.numHosts = 7
         self.rate = 15
@@ -344,9 +357,15 @@ class ParasiticTraceroute(ScapyProtocol):
             try:
                 packet[IP].ttl = self.hosts[packet.dst]['ttl'].pop()
                 del packet.chksum  # XXX Why is this incorrect?
-                log.debug("Sent packet to %s with ttl %d" % (packet.dst, packet.ttl))
+                log.debug(
+                    "Sent packet to %s with ttl %d" %
+                    (packet.dst, packet.ttl))
                 self.sendPacket(packet)
-                k = (packet.id, packet[TCP].sport, packet[TCP].dport, packet[TCP].seq)
+                k = (
+                    packet.id,
+                    packet[TCP].sport,
+                    packet[TCP].dport,
+                    packet[TCP].seq)
                 self.matched_packets[k] = {'ttl': packet.ttl}
                 return
             except IndexError:
@@ -355,7 +374,8 @@ class ParasiticTraceroute(ScapyProtocol):
 
         def maxttl(packet=None):
             if packet:
-                return min(self.ttl_max, *map(lambda x: x - packet.ttl, [64, 128, 256])) - 1
+                return min(
+                    self.ttl_max, *map(lambda x: x - packet.ttl, [64, 128, 256])) - 1
             else:
                 return self.ttl_max
 
@@ -407,7 +427,8 @@ class MPTraceroute(ScapyProtocol):
         self.matched_packets = {}
         self.hosts = []
         self.interval = 0.2
-        self.timeout = ((self.ttl_max - self.ttl_min) * len(self.dst_ports) * self.interval) + 5
+        self.timeout = (
+            (self.ttl_max - self.ttl_min) * len(self.dst_ports) * self.interval) + 5
         self.numPackets = 1
 
     def ICMPTraceroute(self, host):
@@ -417,7 +438,10 @@ class MPTraceroute(ScapyProtocol):
         d = defer.Deferred()
         reactor.callLater(self.timeout, d.callback, self)
 
-        self.sendPackets(IP(dst=host, ttl=(self.ttl_min, self.ttl_max), id=RandShort()) / ICMP(id=RandShort()))
+        self.sendPackets(IP(dst=host,
+                            ttl=(self.ttl_min,
+                                 self.ttl_max),
+                            id=RandShort()) / ICMP(id=RandShort()))
         return d
 
     def UDPTraceroute(self, host):
@@ -441,7 +465,7 @@ class MPTraceroute(ScapyProtocol):
 
         for dst_port in self.dst_ports:
             self.sendPackets(
-                IP(dst=host, ttl=(self.ttl_min, self.ttl_max), id=RandShort()) / TCP(flags=2L, dport=dst_port,
+                IP(dst=host, ttl=(self.ttl_min, self.ttl_max), id=RandShort()) / TCP(flags=2, dport=dst_port,
                                                                                      sport=RandShort(),
                                                                                      seq=RandShort()))
         return d
@@ -484,7 +508,9 @@ class MPTraceroute(ScapyProtocol):
                     self.matched_packets[p].extend(self.received_packets[k])
                 else:
                     self.matched_packets[p] = self.received_packets[k]
-                log.debug("Packet %s matched %s" % ([p], self.received_packets[k]))
+                log.debug(
+                    "Packet %s matched %s" %
+                    ([p], self.received_packets[k]))
                 return 1
             return 0
 
@@ -504,7 +530,8 @@ class MPTraceroute(ScapyProtocol):
                 if isinstance(l, ICMP):
                     addToReceivedPackets(('icmp', l.id), p)
                 elif isinstance(l, TCP):
-                    addToReceivedPackets(('tcp', l.ack - 1, l.dport, l.sport), p)
+                    addToReceivedPackets(
+                        ('tcp', l.ack - 1, l.dport, l.sport), p)
                 elif isinstance(l, UDP):
                     addToReceivedPackets(('udp', l.dport, l.sport), p)
 
@@ -517,7 +544,8 @@ class MPTraceroute(ScapyProtocol):
                 i += matchResponse(('icmp', p.id), p)  # match by ipid
                 i += matchResponse(('icmp', l.id), p)  # match by icmpid
             if isinstance(l, TCP):
-                i += matchResponse(('tcp', l.dport, l.sport), p)  # match by s|dport
+                # match by s|dport
+                i += matchResponse(('tcp', l.dport, l.sport), p)
                 i += matchResponse(('tcp', l.seq, l.sport, l.dport), p)
             if isinstance(l, UDP):
                 i += matchResponse(('udp', l.dport, l.sport), p)

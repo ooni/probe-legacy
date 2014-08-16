@@ -68,7 +68,7 @@ class DNSSpoof(scapyt.ScapyTest):
 
     @defer.inlineCallbacks
     def test_a_lookup(self):
-        question = IP(dst=self.resolverAddr)/UDP()
+        question = IP(dst=self.resolverAddr) / UDP()
         question /= DNS(rd=1, qd=DNSQR(qtype="A",
                                        qclass="IN",
                                        qname=self.hostname))
@@ -79,7 +79,7 @@ class DNSSpoof(scapyt.ScapyTest):
 
     @defer.inlineCallbacks
     def test_control_a_lookup(self):
-        question = IP(dst=self.controlResolverAddr)/UDP() / \
+        question = IP(dst=self.controlResolverAddr) / UDP() / \
             DNS(rd=1, qd=DNSQR(qtype="A", qclass="IN", qname=self.hostname))
         log.msg(
             "Performing query to %s with %s:%s" %

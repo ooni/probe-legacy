@@ -12,6 +12,7 @@ from twisted.internet import threads, defer
 from ooni.kit import domclass
 from ooni.templates import httpt
 
+
 class DOMClassCollector(httpt.HTTPTest):
     name = "DOM class collector"
     author = "Arturo Filastò"

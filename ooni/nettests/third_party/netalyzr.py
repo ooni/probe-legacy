@@ -12,6 +12,7 @@ import time
 import os
 from twisted.internet import reactor, threads, defer
 
+
 class NetalyzrWrapperTest(nettest.NetTestCase):
     name = "NetalyzrWrapper"
     requiresRoot = False
@@ -29,15 +30,20 @@ class NetalyzrWrapperTest(nettest.NetTestCase):
         test_token = time.asctime(time.gmtime()).replace(" ", "_").strip()
 
         self.output_file = os.path.join(outputdir,
-                "NetalyzrCLI_" + test_token + ".out")
+                                        "NetalyzrCLI_" + test_token + ".out")
         self.output_file.strip()
         self.run_me = program + " 2>&1 >> " + self.output_file
 
     def blocking_call(self):
         try:
-            result = threads.blockingCallFromThread(reactor, os.system, self.run_me) 
+            result = threads.blockingCallFromThread(
+                reactor,
+                os.system,
+                self.run_me)
         except:
-            log.debug("Netalyzr had an error, please see the log file: %s" % self.output_file)
+            log.debug(
+                "Netalyzr had an error, please see the log file: %s" %
+                self.output_file)
         finally:
             self.clean_up()
 
@@ -50,7 +56,8 @@ class NetalyzrWrapperTest(nettest.NetTestCase):
         """
         This test simply wraps netalyzr and runs it from command line
         """
-        log.msg("Running NetalyzrWrapper (this will take some time, be patient)")
+        log.msg(
+            "Running NetalyzrWrapper (this will take some time, be patient)")
         log.debug("with command '%s'" % self.run_me)
         # XXX we probably want to use a processprotocol here to obtain the
         # stdout from Netalyzr. This would allows us to visualize progress

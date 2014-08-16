@@ -8,6 +8,7 @@ from ooni import errors
 
 
 class Storage(dict):
+
     """
     A Storage object is like a dictionary except `obj.foo` can be used
     in addition to `obj['foo']`.
@@ -37,8 +38,8 @@ class Storage(dict):
     def __delattr__(self, key):
         try:
             del self[key]
-        except KeyError, k:
-            raise AttributeError, k
+        except KeyError as k:
+            raise AttributeError(k)
 
     def __repr__(self):
         return '<Storage ' + dict.__repr__(self) + '>'
@@ -117,11 +118,13 @@ def generate_filename(testDetails, prefix=None, extension=None, filename=None):
     extension.
     """
     if filename is None:
-        test_name, start_time = testDetails['test_name'], testDetails['start_time']
+        test_name, start_time = testDetails[
+            'test_name'], testDetails['start_time']
         start_time = otime.epochToTimestamp(start_time)
         suffix = "%s-%s" % (test_name, start_time)
         basename = '%s-%s' % (prefix, suffix) if prefix is not None else suffix
-        final_filename = '%s.%s' % (basename, extension) if extension is not None else basename
+        final_filename = '%s.%s' % (
+            basename, extension) if extension is not None else basename
     else:
         if extension is not None:
             basename = filename.split('.')[0] if '.' in filename else filename
@@ -130,6 +133,7 @@ def generate_filename(testDetails, prefix=None, extension=None, filename=None):
             final_filename = filename
 
     return final_filename
+
 
 def sanitize_options(options):
     """

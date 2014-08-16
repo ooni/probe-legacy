@@ -14,7 +14,9 @@ import yaml
 import json
 from hashlib import sha256
 
+
 class InputFile(object):
+
     def __init__(self, input_hash, base_path=config.inputs_directory):
         self.id = input_hash
         cache_path = os.path.join(os.path.abspath(base_path), input_hash)
@@ -36,7 +38,9 @@ class InputFile(object):
             try:
                 self.verify()
             except AssertionError:
-                log.err("The input %s failed validation. Going to consider it not cached." % self.id)
+                log.err(
+                    "The input %s failed validation. Going to consider it not cached." %
+                    self.id)
                 return False
             return True
         return False
@@ -65,6 +69,7 @@ class InputFile(object):
             file_hash = sha256(f.read())
             assert file_hash.hexdigest() == digest
 
+
 def nettest_to_path(path, allow_arbitrary_paths=False):
     """
     Takes as input either a path or a nettest name.
@@ -87,7 +92,9 @@ def nettest_to_path(path, allow_arbitrary_paths=False):
     else:
         raise e.NetTestNotFound(path)
 
+
 class Deck(InputFile):
+
     def __init__(self, deck_hash=None,
                  deckFile=None,
                  decks_directory=config.decks_directory):
@@ -103,7 +110,8 @@ class Deck(InputFile):
         self.decksDirectory = os.path.abspath(decks_directory)
         self.deckHash = deck_hash
 
-        if deckFile: self.loadDeck(deckFile)
+        if deckFile:
+            self.loadDeck(deckFile)
 
     @property
     def cached_file(self):
@@ -194,7 +202,8 @@ class Deck(InputFile):
                     net_test_loader in requires_collector:
                 log.msg("Using the default collector: %s" %
                         response['default']['collector'])
-                net_test_loader.collector = response['default']['collector'].encode('utf-8')
+                net_test_loader.collector = response[
+                    'default']['collector'].encode('utf-8')
                 continue
 
             for th in net_test_loader.requiredTestHelpers:
@@ -203,9 +212,11 @@ class Deck(InputFile):
                     continue
                 test_helper = response[th['name']]
                 log.msg("Using this helper: %s" % test_helper)
-                th['test_class'].localOptions[th['option']] = test_helper['address'].encode('utf-8')
+                th['test_class'].localOptions[
+                    th['option']] = test_helper['address'].encode('utf-8')
                 if net_test_loader in requires_collector:
-                    net_test_loader.collector = test_helper['collector'].encode('utf-8')
+                    net_test_loader.collector = test_helper[
+                        'collector'].encode('utf-8')
 
     @defer.inlineCallbacks
     def fetchAndVerifyNetTestInput(self, net_test_loader):
