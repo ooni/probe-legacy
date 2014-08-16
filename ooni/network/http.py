@@ -9,7 +9,7 @@ except ImportError:
 from zope.interface import implements
 
 from twisted.names import dns
-from twisted.names.client import Resolver, getResolver
+from twisted.names.client import Resolver
 from twisted.web.iweb import IBodyProducer
 
 from twisted.internet import defer
@@ -19,6 +19,7 @@ from twisted.web import client, _newclient, http_headers
 from ooni.utils import log
 
 from ooni.errors import MaximumRedirects
+from ooni.network.dns import getSystemResolver
 
 # These user agents are taken from the "How Unique Is Your Web Browser?"
 # (https://panopticlick.eff.org/browser-uniqueness.pdf) paper as the browser user
@@ -412,7 +413,7 @@ class Request(object):
         if self.dns_resolver:
             resolver = Resolver(servers=[self.dns_resolver])
         else:
-            resolver = getResolver()
+            resolver = getSystemResolver()
         return resolver.query(query, timeout=self._query_timeout)
 
     def _handle_resolution(self, result, host, port):

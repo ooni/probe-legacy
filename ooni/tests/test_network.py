@@ -4,6 +4,9 @@ from twisted.web.test.test_agent import FakeReactorAndConnectMixin
 
 from ooni.network import http
 
+import twisted.internet.base
+twisted.internet.base.DelayedCall.debug = True
+
 
 class TestNetworkHTTP(unittest.TestCase, FakeReactorAndConnectMixin):
 
