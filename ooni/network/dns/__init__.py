@@ -35,6 +35,8 @@ def getSystemResolver():
         resolver = createResolver(servers=[('127.0.0.1', 53)])
     return resolver
 
+
+
 class DNS(object):
     protocol = 'UDP'
     timeout = [1]
