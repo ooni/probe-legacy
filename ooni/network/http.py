@@ -346,7 +346,7 @@ class Response(object):
 
 class Request(object):
     _maximum_redirects = 4
-    _redirect_codes = [301, 302, 303, 307]
+    _redirect_codes = (301, 302, 303, 307)
     _query_timeout = [3, 0]
 
     def __init__(self, reactor=reactor, agent=None, dns_resolver=None):
