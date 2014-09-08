@@ -1,8 +1,10 @@
+import os
 from twisted.python.runtime import platform
 from twisted.names import client, dns, root
 
 from twisted.internet import reactor
 from twisted.internet.base import ThreadedResolver
+
 
 class DNSAnswer(object):
     pass
@@ -19,22 +21,26 @@ class InvalidRDType(DNSError):
 class InvalidRDClass(DNSError):
     pass
 
+
 def createResolver(servers=None):
     if platform.getType() == 'posix':
         resolver = client.Resolver(servers=servers)
-        with open('/etc/resolv.conf') as resolv_conf:
+        resolv_conf_path = os.path.realpath('/etc/resolv.conf')
+        if not os.path.exists(resolv_conf_path):
+            return resolver
+        with open(resolv_conf_path) as resolv_conf:
             resolver.parseConfig(resolv_conf)
     else:
         resolver = root.bootstrap(ThreadedResolver(reactor))
     return resolver
 
+
 def getSystemResolver():
     try:
         resolver = createResolver()
-    except ValueError:
+    except:
         resolver = createResolver(servers=[('127.0.0.1', 53)])
     return resolver
-
 
 
 class DNS(object):

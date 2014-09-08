@@ -18,6 +18,7 @@ from twisted.web import client, _newclient, http_headers
 
 from ooni.utils import log
 
+from ooni.network import isIPAddress
 from ooni.errors import MaximumRedirects
 from ooni.network.dns import getSystemResolver
 
@@ -409,6 +410,7 @@ class Request(object):
     def _resolve(self, parsed_uri):
         if parsed_uri.host in self.dns_resolutions:
             return self.dns_resolutions[parsed_uri.host]
+
         query = dns.Query(parsed_uri.host, dns.A, dns.IN)
         if self.dns_resolver:
             resolver = Resolver(servers=[self.dns_resolver])
@@ -432,9 +434,13 @@ class Request(object):
             endpoint = self._getProxyEndpoint(parsed_uri, proxy)
             return endpoint.connect(factory)
 
-        d = defer.maybeDeferred(self._resolve, parsed_uri)
-        d.addCallback(self._handle_resolution, parsed_uri.host,
-                      parsed_uri.port)
+        if not isIPAddress(parsed_uri.host):
+            d = defer.maybeDeferred(self._resolve, parsed_uri)
+            d.addCallback(self._handle_resolution, parsed_uri.host,
+                          parsed_uri.port)
+        else:
+            d = defer.Deferred()
+            d.callback(parsed_uri.host)
 
         if parsed_uri.scheme == "http":
             d.addCallback(self._getHTTPEndpoint, parsed_uri.port)
