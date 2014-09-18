@@ -12,7 +12,7 @@ from ooni.nettest import NetTestCase
 from ooni.utils import log
 from ooni.settings import config
 
-from ooni.network.http import BodyReceiver, StringProducer, userAgents
+from ooni.network.http import BodyReceiver, StringProducer, userAgents, Request
 from ooni.utils.trueheaders import TrueHeaders
 from ooni.errors import handleAllFailures
 
@@ -355,3 +355,80 @@ class HTTPTest(NetTestCase):
         d.addCallback(self._cbResponse, request, headers_processor,
                       body_processor)
         return d
+
+class NGHTTPTest(NetTestCase):
+
+    http = None
+
+    randomizeUA = False
+    followRedirects = False
+
+
+    name = "NGHTTP Test"
+    version = "0.1.1"
+
+    def _setUp(self):
+        class HTTP(object):
+            def __init__(self, report, follow_redirects):
+                self.report = report
+                self.follow_redirects = follow_redirects
+
+            def success(self, result):
+                for r in result.responseChain():
+                    is_tor = False
+                    if r.proxy and r.proxy[1] == config.tor.socks_port:
+                        is_tor = True
+                    request = {
+                        'headers': list(r.request.headers.getAllRawHeaders()),
+                        'body': r.request.body,
+                        'url': r.request.uri,
+                        'method': r.request.method,
+                        'tor': is_tor
+                    }
+                    response = {
+                        'headers': list(r.headers.getAllRawHeaders()),
+                        'body': r.body,
+                        'code': r.code,
+                        'failure': r.failure_string,
+                        'dns_resolutions': [x.payload.dottedQuad()
+                                            for x in r.dns_resolutions[0]]
+                    }
+                    self.report['requests'].append({
+                            'request': request,
+                            'response': response
+                    })
+
+            def failed(self, result):
+                failure, request = result
+
+            def create_request(self, name):
+                request = Request()
+                request_method = getattr(request, name)
+
+                def perform_request(*args, **kw):
+                    if 'follow_redirects' not in kw:
+                        kw['follow_redirects'] = self.follow_redirects
+                    d = request_method(*args, **kw)
+                    d.addCallback(self.success)
+                    d.addErrback(self.failed)
+                    return d
+
+                return perform_request
+
+            def __getattr__(self, name):
+                if name in ('get', 'put', 'post', 'request'):
+                    return self.create_request(name)
+                raise AttributeError("%s: does not exist." % name)
+
+        self.http = HTTP(self.report,
+                         self.followRedirects)
+        self.report['requests'] = []
+
+    def doRequest(self, url, method="GET",
+                  headers={}, body=None, headers_processor=None,
+                  body_processor=None, use_tor=False):
+        proxy = None
+        if use_tor:
+            proxy = ("127.0.0.1", config.tor.socks_port)
+
+        return self.http.request(method, url, headers, body, proxy=proxy)
