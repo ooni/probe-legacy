@@ -19,6 +19,7 @@ from twisted.web import client, _newclient, http_headers
 from ooni.utils import log
 
 from ooni.network import isIPAddress
+from twisted.internet.error import DNSLookupError
 from ooni.errors import MaximumRedirects
 from ooni.network.dns import getSystemResolver
 
@@ -108,10 +109,15 @@ class TrueOrderedHeaders(http_headers.Headers):
         self._rawHeaders = []
         if isinstance(rawHeaders, list):
             for name, value in rawHeaders:
-                self.addRawHeader(name, value)
+                if isinstance(value, list):
+                    for v in value:
+                        self.addRawHeader(name, v)
+                else:
+                    self.addRawHeader(name, value)
         elif isinstance(rawHeaders, dict):
-            for name, value in rawHeaders.iteritems():
-                self.addRawHeader(name, value)
+            for name, values in rawHeaders.iteritems():
+                for value in values:
+                    self.addRawHeader(name, value)
 
     def removeHeader(self, name):
         for header in self._rawHeaders:
@@ -292,14 +298,13 @@ class _HTTPClientProtocol(_newclient.HTTP11ClientProtocol):
 
 
 class _HTTPClientFactory(protocol.Factory):
-
     def buildProtocol(self, addr):
         return _HTTPClientProtocol()
 
 
 class Response(object):
 
-    def __init__(self, response, request, dns_resolutions):
+    def __init__(self, response, request, dns_resolutions, proxy=None):
         self.headers = response.headers
         self.code = response.code
         self.version = response.version
@@ -307,6 +312,8 @@ class Response(object):
         self.headers = response.headers
         self.request = request
         self.body = None
+        self.proxy = None
+        self.failure_string = ""
         self.dns_resolutions = dns_resolutions
 
         self.body_deferred = defer.Deferred()
@@ -317,7 +324,7 @@ class Response(object):
         ret = "Status: %s\n" % self.code
         ret += "Headers:\n"
         for name, value in self.headers.getAllRawHeaders():
-            ret += "%s: %s\n" % (name, '\n'.join(value))
+            ret += "%s: %s\n" % (name, value)
         if self.dns_resolutions:
             ret += "DNS Resolutions:\n"
             ret += '\n'.join(x.payload.dottedQuad()
@@ -380,32 +387,41 @@ class Request(object):
         if body:
             bodyProducer = StringProducer(body)
 
-        return _newclient.Request._construct(
+        request = _newclient.Request._construct(
             method, parsed_uri.originForm, headers, bodyProducer, parsed_uri
         )
+        request.body = body
+        return request
+
+    def _getTLSPolicy(self, host, port):
+        if hasattr(self.agent, '_policyForHTTPS'):
+            return self.agent._policyForHTTPS.creatorForNetloc(host, port)
+        else:
+            return self.agent._wrapContextFactory(host, port)
 
     def _getProxyEndpoint(self, parsed_uri, proxy):
-        from txsocksx.client import SOCKS5ClientEndpoint
-        from txsocksx.tls import TLSWrapClientEndpoint
+        from twisted.web.client import SchemeNotSupported
         proxy_host, proxy_port = proxy
         proxy_endpoint = endpoints.TCP4ClientEndpoint(self._reactor,
                                                       proxy_host,
                                                       proxy_port)
-        endpoint = SOCKS5ClientEndpoint(parsed_uri.host,
-                                        parsed_uri.port,
-                                        proxy_endpoint)
+        if parsed_uri.scheme not in ('http', 'https'):
+            raise SchemeNotSupported('unsupported scheme', parsed_uri.scheme)
+        endpoint = self.agent.endpointFactory(
+            parsed_uri.host, parsed_uri.port,
+            proxy_endpoint)
         if parsed_uri.scheme == 'https':
-            tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(
-                parsed_uri.host, parsed_uri.port)
-            endpoint = TLSWrapClientEndpoint(tlsPolicy, endpoint)
+            if hasattr(self.agent, '_wrapContextFactory'):
+                tlsPolicy = self.agent._wrapContextFactory(parsed_uri.host, parsed_uri.port)
+            elif hasattr(self.agent, '_policyForHTTPS'):
+                tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(parsed_uri.host, parsed_uri.port)
+            else:
+                raise NotImplementedError("can't figure out how to make a context factory")
+            endpoint = self.agent._tlsWrapper(tlsPolicy, endpoint)
         return endpoint
 
-    def _getHTTPEndpoint(self, ip, port):
-        return endpoints.TCP4ClientEndpoint(self._reactor, ip, port)
-
-    def _getHTTPSEndpoint(self, ip, port, hostname):
-        tlsPolicy = self.agent._policyForHTTPS.creatorForNetloc(hostname, port)
-        return endpoints.SSL4ClientEndpoint(self._reactor, ip, port, tlsPolicy)
+    def _getEndpoint(self, host, scheme, port):
+        return self.agent._getEndpoint(scheme, host, port)
 
     def _resolve(self, parsed_uri):
         if parsed_uri.host in self.dns_resolutions:
@@ -419,17 +435,18 @@ class Request(object):
         return resolver.query(query, timeout=self._query_timeout)
 
     def _handle_resolution(self, result, host, port):
-        self.dns_resolutions[host] = result
+        ip = None
         for answer in result[0]:
             if answer.type is dns.A:
                 ip = answer.payload.dottedQuad()
+        if not ip:
+            raise DNSLookupError(self)
+
+        self.dns_resolutions[host] = result
         return ip
 
     def connect(self, parsed_uri, proxy):
         factory = _HTTPClientFactory()
-        if parsed_uri.scheme not in ('http', 'https'):
-            raise client.SchemeNotSupported('unsupported scheme',
-                                            parsed_uri.scheme)
         if proxy:
             endpoint = self._getProxyEndpoint(parsed_uri, proxy)
             return endpoint.connect(factory)
@@ -442,21 +459,17 @@ class Request(object):
             d = defer.Deferred()
             d.callback(parsed_uri.host)
 
-        if parsed_uri.scheme == "http":
-            d.addCallback(self._getHTTPEndpoint, parsed_uri.port)
-        elif parsed_uri.scheme == "https":
-            d.addCallback(self._getHTTPSEndpoint, parsed_uri.port,
-                          parsed_uri.host)
+        d.addCallback(self._getEndpoint, parsed_uri.scheme, parsed_uri.port)
         d.addCallback(lambda endpoint: endpoint.connect(factory))
         return d
 
     def _handle_response(self, response, host, request, body_receiver,
-                         ignore_body, previous_response):
+                         ignore_body, previous_response, proxy):
         try:
             dns_resolution = self.dns_resolutions[host]
         except KeyError:
             dns_resolution = []
-        r = Response(response, request, dns_resolution)
+        r = Response(response, request, dns_resolution, proxy)
 
         if ignore_body:
             return r
@@ -504,15 +517,20 @@ class Request(object):
 
             @d.addCallback
             def cb(result):
-                proto.transport.loseConnection()
+                if proto.transport:
+                    proto.transport.loseConnection()
                 return result
+
+            @d.addErrback
+            def eb(error):
+                d.errback((error, request))
 
         @ed.addErrback
         def eb(error):
-            d.errback(error)
+            d.errback((error, request))
 
         d.addCallback(self._handle_response, parsed_uri.host, request,
-                      body_receiver, ignore_body, previous_response)
+                      body_receiver, ignore_body, previous_response, proxy)
 
         if previous_response:
             d.addCallback(self._set_previous_response, previous_response)
