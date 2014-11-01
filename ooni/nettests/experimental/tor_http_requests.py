@@ -4,7 +4,7 @@ from twisted.web.client import RedirectAgent, readBody
 from ooni.settings import config
 from ooni.templates.tort import TorTest
 from ooni.utils.trueheaders import TrueHeaders
-from ooni.utils.tor import OnionRoutedTrueHeadersAgent, TorCircuitContextFactory
+from ooni.utils.tor import OnionRoutedAgent, TorCircuitContextFactory
 from ooni.utils.tor import SingleExitStreamAttacher
 from ooni.errors import handleAllFailures
 
@@ -47,7 +47,7 @@ class TorHTTPRequests(TorTest):
         headers = TrueHeaders(request['headers'])
 
         # follow redirects
-        agent = RedirectAgent(OnionRoutedTrueHeadersAgent(reactor,
+        agent = RedirectAgent(OnionRoutedAgent(reactor,
             torCircuitContextFactory=TorCircuitContextFactory(self.state,
                 SingleExitStreamAttacher(self.state, exit))))
         d = agent.request("GET", url, headers=headers)

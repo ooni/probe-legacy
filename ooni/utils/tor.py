@@ -1,6 +1,6 @@
 from twisted.internet import defer, reactor, interfaces
 from twisted.internet.endpoints import TCP4ClientEndpoint, _WrappingFactory
-from twisted.web.client import SchemeNotSupported
+from twisted.web.client import SchemeNotSupported, Agent
 from txsocksx.client import SOCKS5ClientFactory
 from txsocksx.tls import TLSWrapClientEndpoint
 from txtorcon import CircuitListenerMixin, IStreamAttacher, StreamListenerMixin
@@ -61,6 +61,28 @@ class OnionRoutedTCPClientEndpoint(object):
         d = proxyEndpoint.connect(proxyFac)
         d.addCallback(lambda proto: proxyFac._wrappedFactory.deferred)
         return d
+
+class OnionRoutedAgent(Agent):
+    _tlsWrapper = TLSWrapClientEndpoint
+
+    def __init__(self, *args, **kw):
+        self.torCircuitContextFactory = kw.pop('torCircuitContextFactory')
+        super(OnionRoutedAgent, self).__init__(*args, **kw)
+
+    def _getEndpoint(self, scheme, host, port):
+        if scheme not in ('http', 'https'):
+            raise SchemeNotSupported('unsupported scheme', scheme)
+        endpoint = OnionRoutedTCPClientEndpoint(reactor, host, port,
+                self.torCircuitContextFactory)
+        if scheme == 'https':
+            if hasattr(self, '_wrapContextFactory'):
+                tlsPolicy = self._wrapContextFactory(host, port)
+            elif hasattr(self, '_policyForHTTPS'):
+                tlsPolicy = self._policyForHTTPS.creatorForNetloc(host, port)
+            else:
+                raise NotImplementedError("can't figure out how to make a context factory")
+            endpoint = self._tlsWrapper(tlsPolicy , endpoint)
+        return endpoint
 
 class OnionRoutedTrueHeadersAgent(TrueHeadersAgent):
     _tlsWrapper = TLSWrapClientEndpoint

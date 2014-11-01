@@ -3,7 +3,7 @@ from twisted.internet import reactor
 
 from ooni.templates.tort import TorTest
 from ooni.utils import log
-from ooni.utils.tor import OnionRoutedTrueHeadersAgent, TorCircuitContextFactory
+from ooni.utils.tor import OnionRoutedAgent, TorCircuitContextFactory
 from ooni.utils.tor import SingleExitStreamAttacher
 from ooni.errors import handleAllFailures
 
@@ -29,7 +29,7 @@ class TorExitIPTest(TorTest):
             self.report['failure'] = "Router %s not in consensus." % self.input
             return
 
-        agent = OnionRoutedTrueHeadersAgent(reactor,
+        agent = OnionRoutedAgent(reactor,
                 torCircuitContextFactory=TorCircuitContextFactory(self.state,
                     SingleExitStreamAttacher(self.state, exit)))
 
