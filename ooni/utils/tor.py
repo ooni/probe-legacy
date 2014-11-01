@@ -85,7 +85,7 @@ class OnionRoutedTrueHeadersAgent(TrueHeadersAgent):
         return endpoint
 
 @implementer(IStreamAttacher)
-class MetaAttacher(CircuitListenerMixin, StreamListenerMixin):
+class AttacherDispatcher(CircuitListenerMixin, StreamListenerMixin):
     """
     txtorcon supports a single attacher.
 
@@ -97,7 +97,9 @@ class MetaAttacher(CircuitListenerMixin, StreamListenerMixin):
     _streamToAttacherMap = {}
     def __init__(self, state):
         self.state = state
-        self.state.set_attacher(self, reactor)
+        if not self.state.attacher:
+            self.state.set_attacher(self, reactor)
+            log.debug("Adding AttacherDispatcher")
 
     def attach_stream(self, stream, circuits):
         try:
@@ -107,7 +109,11 @@ class MetaAttacher(CircuitListenerMixin, StreamListenerMixin):
             # No streamAttachers have claimed this stream; default to Tor.
             return None
 
-class StreamAttacher(MetaAttacher):
+    def __del__(self):
+        if self.state.attacher == self:
+            self.state.set_attacher(None, reactor)
+
+class StreamAttacher(AttacherDispatcher):
     """
     An instance of this StreamAttacher will attach all streams to randomly
     selected (unweighted) circuits.  Not guarranteed to work, as we do not know
@@ -129,7 +135,7 @@ class StreamAttacher(MetaAttacher):
         """
         getHost = transport.getHost()
         key = (str(getHost.host),int(getHost.port))
-        MetaAttacher._streamToAttacherMap[key] = self
+        AttacherDispatcher._streamToAttacherMap[key] = self
         d = defer.Deferred()
         self.expected_streams[key] = d
         self.request_circuit_build(d)
@@ -191,12 +197,13 @@ class StreamAttacher(MetaAttacher):
             log.debug(str(circuit))
         except KeyError:
             pass
+
     def stream_closed(self, stream, **kw):
         try:
             key = (str(stream.source_addr), int(stream.source_port))
             d = self.expected_streams.pop(key)
             log.debug(str(stream))
-            MetaAttacher._streamToAttacherMap.pop(key)
+            AttacherDispatcher._streamToAttacherMap.pop(key)
         except KeyError:
             pass
 
@@ -207,7 +214,7 @@ class StreamAttacher(MetaAttacher):
             key = (str(stream.source_addr), int(stream.source_port))
             d = self.expected_streams.pop(key)
             log.debug(str(stream))
-            MetaAttacher._streamToAttacherMap.pop(key)
+            AttacherDispatcher._streamToAttacherMap.pop(key)
             stream.close()
         except KeyError:
             pass
@@ -217,7 +224,7 @@ class StreamAttacher(MetaAttacher):
             key = (str(stream.source_addr), int(stream.source_port))
             d = self.expected_streams.pop(key)
             log.debug(str(stream))
-            MetaAttacher._streamToAttacherMap.pop(key)
+            AttacherDispatcher._streamToAttacherMap.pop(key)
         except KeyError:
             pass
 

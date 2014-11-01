@@ -3,7 +3,7 @@ from ooni.nettest import NetTestCase
 from ooni.settings import config
 from ooni.utils import log
 from ooni.utils.tor import OnionRoutedTCPClientEndpoint, TorCircuitContextFactory
-from ooni.utils.tor import SingleExitStreamAttacher, MetaAttacher
+from ooni.utils.tor import SingleExitStreamAttacher, AttacherDispatcher
 
 from ooni import errors
 
@@ -22,7 +22,7 @@ class TorTest(NetTestCase):
             raise errors.TorControlPortNotFound
 
         # Add a circuit attacher
-        MetaAttacher(self.state)
+        AttacherDispatcher(self.state)
 
     def getExitSpecificEndpoint(self, addr, exit):
         """
