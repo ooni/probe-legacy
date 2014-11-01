@@ -296,6 +296,11 @@ class Director(object):
         connection = TCP4ClientEndpoint(reactor, '127.0.0.1',
                                         config.tor.control_port)
         config.tor_state = yield build_tor_connection(connection)
+        # There can be only one!
+        # If ooniprobe was killed and did not detach, this should
+        # put tor back into a known state before we prod it to learn
+        # what our IP address is.
+        config.tor_state.set_attacher(None, reactor)
 
     def startTor(self):
         """ Starts Tor
