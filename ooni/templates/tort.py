@@ -35,15 +35,20 @@ class TorTest(NetTestCase):
                 TorCircuitContextFactory(self.state, SingleExitStreamAttacher(self.state, exit)))
 
     @property
+    def relays(self):
+        return self.state.routers.values()
+
+    @property
     def exits(self):
         return filter(lambda r: 'exit' in r.flags and 'badexit' not in r.flags, self.state.routers.values())
 
     @property
     def guards(self):
-        self.state.guards.values()
+        return self.state.guards.values()
 
+    @property
     def myguards(self):
-        self.state.entry_guards.values()
+        return self.state.entry_guards.values()
 
     def exitsToPort(self, port):
         return filter(lambda r: r.accepted_ports and port in r.accepted_ports, self.exits)
