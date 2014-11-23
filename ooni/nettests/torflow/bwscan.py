@@ -60,6 +60,7 @@ class BwScanTest(TorTest):
         #XXX: may/should? be a local relay
         guard = random.choice(self.guards)
         path = [ guard, relay, exit ]
+        self.report['path'] = [n.id_hex for n in path]
 
         user_agent = "Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0"
         headers = TrueHeaders({'User-Agent': [user_agent]})
