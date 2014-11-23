@@ -295,3 +295,28 @@ class SingleExitStreamAttacher(StreamAttacher):
             d.callback(circuit)
         except KeyError:
             pass
+
+class SpecificPathStreamAttacher(StreamAttacher):
+    """
+    An instance of this StreamAttacher will attach all
+    streams to a specific path (or fail).
+    """
+    def __init__(self, state, path):
+        self.path = path
+        super(SpecificPathStreamAttacher, self).__init__(state)
+
+    def request_circuit_build(self, deferred_to_callback):
+        def addToWaitingCircs(circ):
+            self.waiting_circuits[circ.id] = (circ, deferred_to_callback)
+
+        self.state.build_circuit(self.path).addCallback(addToWaitingCircs)
+
+    def circuit_built(self, circuit):
+        if circuit.purpose != "GENERAL":
+            return
+        try:
+            (circ, d) = self.waiting_circuits.pop(circuit.id)
+            self.built_circuits[circuit.id] = (circuit, d)
+            d.callback(circuit)
+        except KeyError:
+            pass
