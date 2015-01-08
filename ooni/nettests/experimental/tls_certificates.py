@@ -42,7 +42,7 @@ class SSLObservatory(NetTestCase):
         if "https" in url.split(":")[0]: port = 443
         else: port = 80
             
-        host = url.split("//")[1].strip()
+        host = url.split("//")[1].split('/')[0].strip()
         ciphersuite = ":".join(firefox_ciphers)
         endpoint = TLSWrapClientEndpoint(ClientContextFactory(),
                 TCP4ClientEndpoint(reactor, host, port))
