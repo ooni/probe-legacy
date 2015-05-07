@@ -11,49 +11,50 @@ from ooni.oonibclient import OONIBClient
 
 
 @defer.inlineCallbacks
-def upload(report_file, collector=None, bouncer=None):
-    oonib_report_log = OONIBReportLog()
+def upload(report_files, collector=None, bouncer=None):
+    for report_file in report_files:
+        oonib_report_log = OONIBReportLog()
 
-    print "Attempting to upload %s" % report_file
+        print "Attempting to upload %s" % report_file
 
-    with open(config.report_log_file) as f:
-        report_log = yaml.safe_load(f)
+        with open(config.report_log_file) as f:
+            report_log = yaml.safe_load(f)
 
-    report = parser.ReportLoader(report_file)
-    if bouncer and not collector:
-        oonib_client = OONIBClient(bouncer)
-        net_tests = [{
-            'test-helpers': [],
-            'input-hashes': report.header['input_hashes'],
-            'name': report.header['test_name'],
-            'version': report.header['test_version'],
-        }]
-        result = yield oonib_client.lookupTestCollector(
-            net_tests
-        )
-        collector = str(result['net-tests'][0]['collector'])
-
-    if collector is None:
-        try:
-            collector = report_log[report_file]['collector']
-            if collector is None:
-                raise KeyError
-        except KeyError:
-            raise Exception(
-                "No collector or bouncer specified"
-                " and collector not in report log."
+        report = parser.ReportLoader(report_file)
+        if bouncer and not collector:
+            oonib_client = OONIBClient(bouncer)
+            net_tests = [{
+                'test-helpers': [],
+                'input-hashes': report.header['input_hashes'],
+                'name': report.header['test_name'],
+                'version': report.header['test_version'],
+            }]
+            result = yield oonib_client.lookupTestCollector(
+                net_tests
             )
+            collector = str(result['net-tests'][0]['collector'])
 
-    oonib_reporter = OONIBReporter(report.header, collector)
-    log.msg("Creating report for %s with %s" % (report_file, collector))
-    report_id = yield oonib_reporter.createReport()
-    yield oonib_report_log.created(report_file, collector, report_id)
-    for entry in report:
-        print "Writing entry"
-        yield oonib_reporter.writeReportEntry(entry)
-    log.msg("Closing report.")
-    yield oonib_reporter.finish()
-    yield oonib_report_log.closed(report_file)
+        if collector is None:
+            try:
+                collector = report_log[report_file]['collector']
+                if collector is None:
+                    raise KeyError
+            except KeyError:
+                raise Exception(
+                    "No collector or bouncer specified"
+                    " and collector not in report log."
+                )
+
+        oonib_reporter = OONIBReporter(report.header, collector)
+        log.msg("Creating report for %s with %s" % (report_file, collector))
+        report_id = yield oonib_reporter.createReport()
+        yield oonib_report_log.created(report_file, collector, report_id)
+        for entry in report:
+            print "Writing entry"
+            yield oonib_reporter.writeReportEntry(entry)
+        log.msg("Closing report.")
+        yield oonib_reporter.finish()
+        yield oonib_report_log.closed(report_file)
 
 
 @defer.inlineCallbacks

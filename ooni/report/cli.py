@@ -39,17 +39,11 @@ class Options(usage.Options):
             raise usage.UsageError(
                 "Must specify either command upload, status or read"
             )
-        if self['command'] == "upload":
-            try:
-                self['report_file'] = args[1]
-            except IndexError:
-                self['report_file'] = None
-        elif self['command'] == "read":
+        if self['command'] in ("upload", "read"):
             try:
                 self['report_files'] = args[1:]
             except IndexError:
                 self['report_files'] = None
-
 
 
 def tor_check():
@@ -70,9 +64,9 @@ def run():
     config.global_options = dict(options)
     config.set_paths()
     config.read_config_file()
-    if options['command'] == "upload" and options['report_file']:
+    if options['command'] == "upload" and options['report_files']:
         tor_check()
-        return tool.upload(options['report_file'],
+        return tool.upload(options['report_files'],
                            options['collector'],
                            options['bouncer'])
     elif options['command'] == "upload":
