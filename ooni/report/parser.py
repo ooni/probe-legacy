@@ -1,4 +1,44 @@
+from pprint import pprint
 import yaml
+
+
+def http_requests_tampering(entry):
+    if entry["body_length_match"] is False:
+        return True
+    elif entry["headers_match"] is False:
+        return True
+    return False
+
+tampering_detectors = {
+    "http_requests": http_requests_tampering
+}
+
+
+def tampering(report_header, report_entry):
+    func = tampering_detectors.get(report_header['test_name'])
+    return func(report_entry)
+
+
+def http_requests_pretty_print(entry, verbosity):
+    output = {}
+    if verbosity == 0:
+        output['input'] = entry['input']
+    else:
+        output = entry
+    pprint(output)
+
+pretty_printers = {
+    "http_requests": http_requests_pretty_print
+}
+
+
+def pretty_print_header(header, verbosity=0):
+    pprint(header)
+
+
+def pretty_print(report_header, report_entry, verbosity=0):
+    func = pretty_printers.get(report_header['test_name'])
+    func(report_entry, verbosity)
 
 
 class ReportLoader(object):
@@ -26,7 +66,7 @@ class ReportLoader(object):
 
     def next(self):
         try:
-            self._yfp.next()
+            return self._yfp.next()
         except StopIteration:
             self.close()
             raise StopIteration

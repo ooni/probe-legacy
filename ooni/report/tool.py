@@ -89,3 +89,12 @@ def status():
     print "------------------"
     for report_file, value in oonib_report_log.reports_incomplete:
         print_report(report_file, value)
+
+
+def read(report_files):
+    for report_file in report_files:
+        report = parser.ReportLoader(report_file)
+        parser.pretty_print_header(report.header)
+        for entry in report:
+            if parser.tampering(report.header, entry):
+                parser.pretty_print(report.header, entry)

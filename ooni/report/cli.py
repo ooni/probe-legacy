@@ -35,15 +35,21 @@ class Options(usage.Options):
             )
             return
         self['command'] = args[0]
-        if self['command'] not in ("upload", "status"):
+        if self['command'] not in ("upload", "status", "read"):
             raise usage.UsageError(
-                "Must specify either command upload or status"
+                "Must specify either command upload, status or read"
             )
         if self['command'] == "upload":
             try:
                 self['report_file'] = args[1]
             except IndexError:
                 self['report_file'] = None
+        elif self['command'] == "read":
+            try:
+                self['report_files'] = args[1:]
+            except IndexError:
+                self['report_files'] = None
+
 
 
 def tor_check():
@@ -75,5 +81,7 @@ def run():
                                options['bouncer'])
     elif options['command'] == "status":
         return tool.status()
+    elif options['command'] == "read":
+        return tool.read(options['report_files'])
     else:
         print(options)
