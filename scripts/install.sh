@@ -146,7 +146,7 @@ fi
 if [ -z "$lsb_dist" ] && [ -r /etc/redhat-release ]; then
 	lsb_dist='Fedora'
 fi
-if [ "$(uname -m)" =~ ^arm ]; then
+if [[ "$(uname -m)" =~ ^arm ]]; then
     arch="$(uname -m)"
     echo "We are running on ARM architecture."
 fi
