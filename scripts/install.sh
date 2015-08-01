@@ -146,6 +146,10 @@ fi
 if [ -z "$lsb_dist" ] && [ -r /etc/redhat-release ]; then
 	lsb_dist='Fedora'
 fi
+if [ "$(uname -m)" =~ ^arm ]; then
+    arch="$(uname -m)"
+    echo "We are running on ARM architecture."
+fi
 
 install_obfs4proxy() {
 
@@ -207,6 +211,15 @@ install_go() {
       )
       ;;
     Ubuntu|Debian)
+      if [ "$arch" =~ ^arm ]; then
+          set -x
+          $sh_c "git clone https://go.googlesource.com/go"
+          $sh_c "cd go"
+          $sh_c "git checkout go1.4.1"
+          $sh_c "cd go/src"
+          $sh_c "all.bash"
+      fi
+
       if [ "$lsb_dist" = 'Debian' ] && 
         [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
         setup_backports
