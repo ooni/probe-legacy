@@ -141,6 +141,16 @@ if [ -z "$lsb_dist" ] && [ -r /etc/debian_version ]; then
   distro_version="$(cat /etc/debian_version)"
   distro_codename="$(. /etc/os-release && echo "$VERSION" | cut -d '(' -f2 | cut -d ')' -f1)"
 fi
+
+# Debian and possibly other Debian-like distributions do not provide a numeric
+# distribution release value. The following case statement ensures that the
+# distro_version variable is indeed a numeric variable.
+non_numeric_version=false
+case $distro_version in
+    ''|*[!0-9]*) non_numeric_version=true ;;
+    *) non_numeric_version=false ;;
+esac
+
 if [ -z "$lsb_dist" ] && [ -r /etc/fedora-release ]; then
 	lsb_dist='Fedora'
 fi
@@ -215,13 +225,15 @@ install_go() {
           $sh_c "git checkout go1.4.1"
           $sh_c "cd go/src"
           $sh_c "all.bash"
-      elif [ "$lsb_dist" = 'Debian' ] &&
-          [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
-        setup_backports
-        (
-          set -x
-          $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
-        )
+      elif [ "$lsb_dist" = 'Debian' ]; then
+             if [ "$non_numeric_version" = false ] &&
+                [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
+               setup_backports
+               (
+                set -x
+                $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
+               )
+             fi
       else 
         (
           set -x
