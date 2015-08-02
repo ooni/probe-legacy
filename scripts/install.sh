@@ -82,9 +82,9 @@ user="$(id -un 2>/dev/null || true)"
 sh_c='sh -c'
 if [ "$user" != 'root' ]; then
 	if command_exists sudo; then
-		sh_c='sudo sh -c -E'
+		sh_c='sudo -E sh -c'
 	elif command_exists su; then
-		sh_c='su -c --preserve-environment'
+		sh_c='su --preserve-environment -c'
 	else
 		echo >&2 'Error: this installer needs the ability to run commands as root.'
 		echo >&2 'We are unable to find either "sudo" or "su" available to make this happen.'
@@ -222,7 +222,7 @@ install_go() {
           set -x
           $sh_c "git clone --branch go1.4.1 --depth 1 https://go.googlesource.com/go"
           $sh_c "cd go/src"
-          $sh_c "all.bash"
+          $sh_c "./all.bash"
       elif [ "$lsb_dist" = 'Debian' ]; then
              if [ "$non_numeric_version" = false ] &&
                 [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
