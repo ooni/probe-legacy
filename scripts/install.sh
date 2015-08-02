@@ -217,11 +217,6 @@ install_go() {
       ;;
     Debian)
       (
-      if expr "$arch" : '^arm' ; then
-          set -x
-          $sh_c "git clone --branch go1.4.1 --depth 1 https://go.googlesource.com/go"
-          $sh_c "cd go/src"
-          $sh_c "./all.bash"
       if [ "$non_numeric_version" = false ] &&
          [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
         setup_backports
