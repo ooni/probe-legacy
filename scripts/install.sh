@@ -215,27 +215,36 @@ install_go() {
         $sh_c "${yum} -y install golang"
       )
       ;;
-    Ubuntu|Debian)
+    Debian)
+      (
       if expr "$arch" : '^arm' ; then
           set -x
           $sh_c "git clone --branch go1.4.1 --depth 1 https://go.googlesource.com/go"
           $sh_c "cd go/src"
           $sh_c "./all.bash"
-      elif [ "$lsb_dist" = 'Debian' ]; then
-             if [ "$non_numeric_version" = false ] &&
-                [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
-               setup_backports
-               (
-                set -x
-                $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
-               )
-             fi
-      else 
-        (
+      if [ "$non_numeric_version" = false ] &&
+         [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
+        setup_backports
+        set -x
+        $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
+      fi
+      elif [ "$non_numeric_version" = true ]; then
+          # Stable Debian releases provide a numeric version whereas testing
+          # and unstable not (https://www.debian.org/releases/).
+          # No need to install backports
           set -x
           $sh_c "apt-get install -y -q golang"
-        )
+      else 
+          set -x
+          $sh_c "apt-get install -y -q golang"
       fi
+      )
+      ;;
+    Ubuntu)
+      (
+        set -x
+        $sh_c "apt-get install -y -q golang"
+      )
       ;;
   esac
 }
