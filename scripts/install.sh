@@ -132,7 +132,6 @@ fi
 
 # perform some very rudimentary platform detection
 arch="$(uname -m)"
-go_version=$(go version | cut -d ' ' -f3 | tr -d 'go.')
 lsb_dist=''
 if command_exists lsb_release; then
 	lsb_dist="$(lsb_release -si)"
@@ -254,6 +253,7 @@ install_pluggable_transport_deps() {
     install_go
   fi
 
+  go_version=$(go version | cut -d ' ' -f3 | tr -d 'go.')
   if [ expr "$arch" : '^arm' ] &&
       [ $go_version -lt "$(echo $MIN_GO_VERSION| tr -d '.' )" ]; then
     echo >&2
