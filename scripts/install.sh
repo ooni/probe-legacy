@@ -83,9 +83,9 @@ user="$(id -un 2>/dev/null || true)"
 sh_c='sh -c'
 if [ "$user" != 'root' ]; then
 	if command_exists sudo; then
-		sh_c='sudo sh -c -E'
+		sh_c='sudo -E sh -c'
 	elif command_exists su; then
-		sh_c='su -c --preserve-environment'
+		sh_c='su --preserve-environment -c'
 	else
 		echo >&2 'Error: this installer needs the ability to run commands as root.'
 		echo >&2 'We are unable to find either "sudo" or "su" available to make this happen.'
@@ -127,6 +127,7 @@ elif ! ($curl $TOR_DEB_REPO | grep "Apache Server at deb.torproject.org");then
 fi
 
 # perform some very rudimentary platform detection
+arch="$(uname -m)"
 lsb_dist=''
 if command_exists lsb_release; then
 	lsb_dist="$(lsb_release -si)"
@@ -141,6 +142,16 @@ if [ -z "$lsb_dist" ] && [ -r /etc/debian_version ]; then
   distro_version="$(cat /etc/debian_version)"
   distro_codename="$(. /etc/os-release && echo "$VERSION" | cut -d '(' -f2 | cut -d ')' -f1)"
 fi
+
+# Debian and possibly other Debian-like distributions do not provide a numeric
+# distribution release value. The following case statement ensures that the
+# distro_version variable is indeed a numeric variable.
+non_numeric_version=false
+case $distro_version in
+    ''|*[!0-9]*) non_numeric_version=true ;;
+    *) non_numeric_version=false ;;
+esac
+
 if [ -z "$lsb_dist" ] && [ -r /etc/fedora-release ]; then
 	lsb_dist='Fedora'
 fi
@@ -193,8 +204,6 @@ install_meek() {
 
 setup_backports() {
   echo "deb http://ftp.de.debian.org/debian/ ${distro_codename}-backports main" > /etc/apt/sources.list.d/stable.list
-  $sh_c "gpg --keyserver pgpkeys.mit.edu --recv-key A1BD8E9D78F7FE5C3E65D8AF8B48AD6246925553"
-  $sh_c "gpg -a --export A1BD8E9D78F7FE5C3E65D8AF8B48AD6246925553 | apt-key add -"
   $sh_c "apt-get update"
 }
 
@@ -207,20 +216,36 @@ install_go() {
         $sh_c "${yum} -y install golang"
       )
       ;;
-    Ubuntu|Debian)
-      if [ "$lsb_dist" = 'Debian' ] && 
-        [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
-        setup_backports
-        (
+    Debian)
+      (
+      if expr "$arch" : '^arm' ; then
           set -x
-          $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
-        )
-      else 
-        (
+          $sh_c "git clone --branch go1.4.1 --depth 1 https://go.googlesource.com/go"
+          $sh_c "cd go/src"
+          $sh_c "./all.bash"
+      if [ "$non_numeric_version" = false ] &&
+         [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
+        setup_backports
+        set -x
+        $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
+      fi
+      elif [ "$non_numeric_version" = true ]; then
+          # Stable Debian releases provide a numeric version whereas testing
+          # and unstable not (https://www.debian.org/releases/).
+          # No need to install backports
           set -x
           $sh_c "apt-get install -y -q golang"
-        )
+      else 
+          set -x
+          $sh_c "apt-get install -y -q golang"
       fi
+      )
+      ;;
+    Ubuntu)
+      (
+        set -x
+        $sh_c "apt-get install -y -q golang"
+      )
       ;;
   esac
 }
