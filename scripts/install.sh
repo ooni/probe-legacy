@@ -20,6 +20,10 @@ PYTHON_PREFIX="/usr/local"
 MIN_DEBIAN_VERSION=8
 MIN_UBUNTU_VERSION=11
 
+# Minimum golang version
+# ARM arch installation require version greater than 1.4.1
+MIN_GO_VERSION=1.4.1
+
 url='https://get.ooni.io/'
 
 usage() {
@@ -128,6 +132,7 @@ fi
 
 # perform some very rudimentary platform detection
 arch="$(uname -m)"
+go_version=$(go version | cut -d ' ' -f3 | tr -d 'go.')
 lsb_dist=''
 if command_exists lsb_release; then
 	lsb_dist="$(lsb_release -si)"
@@ -218,17 +223,11 @@ install_go() {
       ;;
     Debian)
       (
-      if expr "$arch" : '^arm' ; then
-          set -x
-          $sh_c "git clone --branch go1.4.1 --depth 1 https://go.googlesource.com/go"
-          $sh_c "cd go/src"
-          $sh_c "./all.bash"
       if [ "$non_numeric_version" = false ] &&
-         [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
+          [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
         setup_backports
         set -x
         $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
-      fi
       elif [ "$non_numeric_version" = true ]; then
           # Stable Debian releases provide a numeric version whereas testing
           # and unstable not (https://www.debian.org/releases/).
@@ -254,6 +253,15 @@ install_pluggable_transport_deps() {
   if ! command_exists go; then
     install_go
   fi
+
+  if [ expr "$arch" : '^arm' ] &&
+      [ $go_version -lt "$(echo $MIN_GO_VERSION| tr -d '.' )" ]; then
+    echo >&2
+    echo >&2 "  Pluggable transports installation requires minimun golang"
+    echo >&2 "  version: $MIN_GO_VERSION"
+    exit 1
+  fi
+
   case "$lsb_dist" in
     Fedora)
       (
