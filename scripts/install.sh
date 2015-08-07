@@ -232,7 +232,7 @@ install_go() {
         setup_backports
         set -x
         $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
-      else [ "$non_numeric_version" = true ]; then
+      else
           # Stable Debian releases provide a numeric version whereas testing
           # and unstable not (https://www.debian.org/releases/).
           # No need to install backports
