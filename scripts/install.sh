@@ -222,7 +222,7 @@ install_go() {
       ;;
     Debian)
       (
-      if [ expr "$arch" : '^arm' ]; then
+      if expr "$arch" : '^arm' ; then
         echo >&2
         echo >&2 "  Pluggable transports installation requires minimun golang"
         echo >&2 "  version: $MIN_GO_VERSION"
@@ -256,8 +256,8 @@ install_pluggable_transport_deps() {
   fi
 
   go_version=$(go version | cut -d ' ' -f3 | tr -d 'go.')
-  if [ expr "$arch" : '^arm' ] &&
-      [ $go_version -lt "$(echo $MIN_GO_VERSION| tr -d '.' )" ]; then
+  if  expr "$arch" : '^arm'  &&
+       [ $go_version -lt "$(echo $MIN_GO_VERSION| tr -d '.' )" ]; then
     echo >&2
     echo >&2 "  Pluggable transports installation requires minimun golang"
     echo >&2 "  version: $MIN_GO_VERSION"
