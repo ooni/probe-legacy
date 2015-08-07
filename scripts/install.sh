@@ -222,18 +222,20 @@ install_go() {
       ;;
     Debian)
       (
-      if [ "$non_numeric_version" = false ] &&
+      if [ expr "$arch" : '^arm' ]; then
+        echo >&2
+        echo >&2 "  Pluggable transports installation requires minimun golang"
+        echo >&2 "  version: $MIN_GO_VERSION"
+        exit 1
+      elif [ "$non_numeric_version" = false ] &&
           [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
         setup_backports
         set -x
         $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
-      elif [ "$non_numeric_version" = true ]; then
+      else [ "$non_numeric_version" = true ]; then
           # Stable Debian releases provide a numeric version whereas testing
           # and unstable not (https://www.debian.org/releases/).
           # No need to install backports
-          set -x
-          $sh_c "apt-get install -y -q golang"
-      else 
           set -x
           $sh_c "apt-get install -y -q golang"
       fi
