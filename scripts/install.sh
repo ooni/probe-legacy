@@ -259,6 +259,7 @@ install_pluggable_transport_deps() {
   if  expr "$arch" : '^arm'  &&
        [ $go_version -lt "$(echo $MIN_GO_VERSION| tr -d '.' )" ]; then
     echo >&2
+    echo >&2 "  Installed go version: $(go version)"
     echo >&2 "  Pluggable transports installation requires minimun golang"
     echo >&2 "  version: $MIN_GO_VERSION"
     exit 1
