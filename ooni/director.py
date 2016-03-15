@@ -79,11 +79,6 @@ class Director(object):
         self.successfulMeasurements = 0
         self.failedMeasurements = 0
 
-        self.totalMeasurements = 0
-
-        # The cumulative runtime of all the measurements
-        self.totalMeasurementRuntime = 0
-
         self.failures = []
 
         self.torControlProtocol = None
@@ -146,56 +141,8 @@ class Director(object):
         else:
             yield config.probe_ip.lookup()
 
-    @property
-    def measurementSuccessRatio(self):
-        if self.totalMeasurements == 0:
-            return 0
-
-        return self.successfulMeasurements / self.totalMeasurements
-
-    @property
-    def measurementFailureRatio(self):
-        if self.totalMeasurements == 0:
-            return 0
-
-        return self.failedMeasurements / self.totalMeasurements
-
-    @property
-    def measurementSuccessRate(self):
-        """
-        The speed at which tests are succeeding globally.
-
-        This means that fast tests that perform a lot of measurements will
-        impact this value quite heavily.
-        """
-        if self.totalMeasurementRuntime == 0:
-            return 0
-
-        return self.successfulMeasurements / self.totalMeasurementRuntime
-
-    @property
-    def measurementFailureRate(self):
-        """
-        The speed at which tests are failing globally.
-        """
-        if self.totalMeasurementRuntime == 0:
-            return 0
-
-        return self.failedMeasurements / self.totalMeasurementRuntime
-
-    def measurementTimedOut(self, measurement):
-        """
-        This gets called every time a measurement times out independenty from
-        the fact that it gets re-scheduled or not.
-        """
-        pass
-
-    def measurementStarted(self, measurement):
-        self.totalMeasurements += 1
-
     def measurementSucceeded(self, result, measurement):
         log.debug("Successfully completed measurement: %s" % measurement)
-        self.totalMeasurementRuntime += measurement.runtime
         self.successfulMeasurements += 1
         measurement.result = result
         test_name = test_class_name_to_name(measurement.testInstance.name)
@@ -208,23 +155,10 @@ class Director(object):
 
     def measurementFailed(self, failure, measurement):
         log.debug("Failed doing measurement: %s" % measurement)
-        self.totalMeasurementRuntime += measurement.runtime
 
         self.failedMeasurements += 1
         measurement.result = failure
         return measurement
-
-    def reporterFailed(self, failure, net_test):
-        """
-        This gets called every time a reporter is failing and has been removed
-        from the reporters of a NetTest.
-        Once a report has failed to be created that net_test will never use the
-        reporter again.
-
-        XXX hook some logic here.
-        note: failure contains an extra attribute called failure.reporter
-        """
-        pass
 
     def netTestDone(self, net_test):
         self.activeNetTests.remove(net_test)
