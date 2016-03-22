@@ -98,8 +98,8 @@ def getArguments(test_class):
     return arguments
 
 
-def test_class_name_to_name(test_class_name):
-    return test_class_name.lower().replace(' ', '_')
+def normaliseTestName(test_name):
+    return test_name.lower().replace(' ', '_')
 
 
 def getNetTestInformation(net_test_file):
@@ -280,7 +280,7 @@ class NetTestLoader(object):
         test_cases = []
         exec net_test_file_object.read() in ns
         for item in ns.itervalues():
-            test_cases.extend(self._get_test_methods(item))
+            test_cases.extend(self._getTestMethods(item))
 
         if not test_cases:
             raise e.NoTestCasesFound
@@ -294,7 +294,7 @@ class NetTestLoader(object):
         test_cases = []
         module = filenameToModule(net_test_file)
         for __, item in getmembers(module):
-            test_cases.extend(self._get_test_methods(item))
+            test_cases.extend(self._getTestMethods(item))
 
         if not test_cases:
             raise e.NoTestCasesFound
@@ -324,7 +324,7 @@ class NetTestLoader(object):
         """
         test_class, _ = test_cases[0]
         self.testVersion = test_class.version
-        self.testName = test_class_name_to_name(test_class.name)
+        self.testName = normaliseTestName(test_class.name)
         self.testCases = test_cases
         self.testClasses = set([])
         self.testHelpers = {}
@@ -359,7 +359,7 @@ class NetTestLoader(object):
             test_instance._checkRequiredOptions()
             test_instance._checkValidOptions()
 
-    def _get_test_methods(self, item):
+    def _getTestMethods(self, item):
         """
         Look for test_ methods in subclasses of NetTestCase
         """

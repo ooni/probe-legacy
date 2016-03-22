@@ -18,7 +18,6 @@ from twisted.internet.error import ConnectionRefusedError
 from twisted.python.failure import Failure
 from twisted.internet.endpoints import TCP4ClientEndpoint
 
-from txsocksx.http import SOCKS5Agent
 
 from ooni.utils import log
 from ooni.tasks import Measurement
@@ -302,6 +301,7 @@ class OONIBReporter(OReporter):
 
 
         if self.collectorAddress.startswith('httpo://'):
+            from txsocksx.http import SOCKS5Agent
             self.collectorAddress = \
                 self.collectorAddress.replace('httpo://', 'http://')
             proxyEndpoint = TCP4ClientEndpoint(reactor, '127.0.0.1',

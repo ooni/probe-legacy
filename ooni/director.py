@@ -10,8 +10,6 @@ from ooni.settings import config
 from ooni import errors
 from ooni.nettest import test_class_name_to_name
 
-from txtorcon import TorConfig, TorState, launch_tor, build_tor_connection
-
 from twisted.internet import defer, reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint
 
@@ -227,6 +225,7 @@ class Director(object):
 
     @defer.inlineCallbacks
     def getTorState(self):
+        from txtorcon import build_tor_connection
         connection = TCP4ClientEndpoint(reactor, '127.0.0.1',
                                         config.tor.control_port)
         config.tor_state = yield build_tor_connection(connection)
@@ -236,6 +235,8 @@ class Director(object):
         Launches a Tor with :param: socks_port :param: control_port
         :param: tor_binary set in ooniprobe.conf
         """
+        from txtorcon import TorConfig, TorState, launch_tor
+
         log.msg("Starting Tor...")
 
         @defer.inlineCallbacks

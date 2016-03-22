@@ -165,7 +165,7 @@ class Deck(InputFile):
         if net_test_loader.collector and net_test_loader.collector.startswith('https://'):
             _twisted_14_0_2_version = Version('twisted', 14, 0, 2)
             if _twisted_version < _twisted_14_0_2_version:
-                raise e.HTTPCollectorUnsupported
+                raise e.HTTPSCollectorUnsupported
         elif net_test_loader.collector and net_test_loader.collector.startswith('http://'):
             if config.advanced.insecure_collector is not True:
                 raise e.InsecureCollector
