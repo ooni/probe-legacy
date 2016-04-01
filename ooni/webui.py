@@ -1,3 +1,5 @@
+import os
+
 from twisted.scripts import twistd
 from twisted.python import usage
 from twisted.internet import reactor
@@ -6,18 +8,33 @@ from twisted.application import service
 
 from ooni.web.root import OONIProbeWebRoot
 from ooni.settings import config
+from ooni.director import Director
+from ooni.utils import log
 
 class WebUI(service.MultiService):
     portNum = 8822
     def startService(self):
-        # XXX
-        # Add here the starting of the director, tor and every thing else
-        director = None
-        root = server.Site(OONIProbeWebRoot(config, director))
-        self._port = reactor.listenTCP(self.portNum, root)
+        service.MultiService.startService(self)
+        config.set_paths()
+        config.initialize_ooni_home()
+        config.read_config_file()
+        def _started(res):
+            log.msg("Director started")
+            root = server.Site(OONIProbeWebRoot(config, director))
+            self._port = reactor.listenTCP(self.portNum, root)
+        director = Director()
+        d = director.start()
+        d.addCallback(_started)
+        d.addErrback(self._startupFailed)
+
+    def _startupFailed(self, err):
+        log.err("Failed to start the director")
+        log.exception(err)
+        os.abort()
 
     def stopService(self):
-        self._port.stopListening()
+        if self._port:
+            self._port.stopListening()
 
 class StartOoniprobeWebUIPlugin:
     tapname = "ooniprobe"
