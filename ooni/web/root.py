@@ -1,10 +1,11 @@
 import os
+import re
 import json
-from twisted.web import resource
-from twisted.web.static import File
+from twisted.web import resource, static
 
 
 class WuiResource(resource.Resource):
+    isLeaf = True
     def __init__(self, director):
         self.director = director
         resource.Resource.__init__(self)
@@ -20,20 +21,61 @@ class WuiResource(resource.Resource):
         return json_string
 
 
-class Deck(WuiResource):
-    pass
+class DeckGenerate(WuiResource):
+    def render_GET(self, request):
+        return {"generate": "deck"}
+
+
+class DeckStart(WuiResource):
+    def __init__(self, director, deck_name):
+        WuiResource.__init__(self, director)
+        self.deck_name = deck_name
+
+    def render_GET(self, request):
+        return {"start": self.deck_name}
+
+
+class DeckStatus(WuiResource):
+    def __init__(self, director, deck_name):
+        WuiResource.__init__(self, director)
+        self.deck_name = deck_name
+
+    def render_GET(self, request):
+        return {"deck": self.deck_name}
+
+
+class DeckList(WuiResource):
+    def render_GET(self, request):
+        return {"deck": "list"}
 
 
 class Results(WuiResource):
-    pass
+    def render_GET(self, request):
+        return {"result": "bar"}
 
 
 class OONIProbeWebRoot(resource.Resource):
+    routes = [
+        ('^/deck/generate$', DeckGenerate),
+        ('^/deck/(.*)/start$', DeckStart),
+        ('^/deck/(.*)$', DeckStatus),
+        ('^/deck$', DeckList),
+        ('^/results$', Results)
+    ]
     def __init__(self, config, director):
         resource.Resource.__init__(self)
-        wui_directory = os.path.join(config.data_directory, 'ui', 'app')
-        # XXX figure out how to avoid having the extra / in the URL
-        self.putChild('', File(wui_directory))
-        # XXX figure out a better way to manage routing such as /deck/(.*)/start
-        self.putChild('deck', Deck(director))
-        self.putChild('results', Results(director))
+
+        self._director = director
+        self._config = config
+        self._route_map = map(lambda x: (re.compile(x[0]), x[1]), self.routes)
+
+        wui_directory = os.path.join(self._config.data_directory, 'ui', 'app')
+        self._static = static.File(wui_directory)
+
+
+    def getChild(self, path, request):
+        for route, r in self._route_map:
+            match = route.search(request.path)
+            if match:
+                return r(self._director, *match.groups())
+        return self._static.getChild(path, request)
