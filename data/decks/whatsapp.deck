@@ -7,7 +7,7 @@
     pcapfile: null
     reportfile: null
     resume: 0
-    subargs: [-f, 'whatsappurl.list']
+    subargs: [-f, 'httpo://ihiderha53f36lsd.onion/input/1b7bd2c13b54c8b109da0b8d9032323ecb0de5787cec08be9db587062963bbdf']
     test_file: blocking/http_requests
 - options:
     collector: null
@@ -18,19 +18,8 @@
     pcapfile: null
     reportfile: null
     resume: 0
-    subargs: [-f, 'whatsappurl.list']
+    subargs: [-f, 'httpo://ihiderha53f36lsd.onion/input/a05c0730028fdee68b7b21a53c4b05cc398606d5730a506ddcfe2add1ca8d91e']
     test_file: blocking/dns_consistency
-- options:
-    collector: null
-    help: 0
-    logfile: null
-    no-default-reporter: 0
-    parallelism: null
-    pcapfile: null
-    reportfile: null
-    resume: 0
-    subargs: [-f, 'whatsapp-ipv4-ports.list']
-    test_file: blocking/tcp_connect
 - options:
     collector: null
     help: 0
