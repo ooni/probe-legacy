@@ -1,0 +1,144 @@
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: []
+    test_file: manipulation/captiveportal
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: [-f, 'var/example_inputs/http_host_file.txt']
+    test_file: manipulation/http_host
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: [-h, torproject.org, -r, '4.2.2.2:53']
+    test_file: manipulation/dns_spoof
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: []
+    test_file: manipulation/traceroute
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: []
+    test_file: manipulation/http_invalid_request_line
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: []
+    test_file: manipulation/http_header_field_manipulation
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: []
+    test_file: blocking/meek_fronted_requests
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: []
+    test_file: blocking/vanilla_tor
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: [-f, 'var/example_inputs/url_lists_file.txt']
+    test_file: blocking/tcp_connect
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: [-f, 'var/example_inputs/http_host_file.txt']
+    test_file: blocking/dns_consistency
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: [-f, 'var/example_inputs/bridges.txt']
+    test_file: blocking/bridge_reachability
+    testdeck: null
+- options:
+    collector: null
+    help: 0
+    logfile: null
+    no-default-reporter: 0
+    parallelism: null
+    pcapfile: null
+    reportfile: null
+    resume: 0
+    subargs: [-f, 'var/example_inputs/url_lists_file.txt']
+    test_file: scanning/http_url_list
+    testdeck: null
