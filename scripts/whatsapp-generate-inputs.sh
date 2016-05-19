@@ -9,17 +9,12 @@ www.whatsapp.com
 web.whatsapp.com
 www.whatsapp.com/cidr.txt
 whatsapp.com
-sro.whatsapp.net/client/iphone/iq.php
-sro.whatsapp.net/client/android/iq.php
-static.reverse.softlayer.com
 "
 
 WHATSAPP_DOMAINS="
 www.whatsapp.com
 web.whatsapp.com
 whatsapp.com
-sro.whatsapp.net
-static.reverse.softlayer.com
 "
 
 URL_LIST=$(mktemp)
