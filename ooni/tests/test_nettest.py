@@ -502,7 +502,7 @@ class TestNetTestScheduling(ConfigTestCase):
     def test_generate_measurements(self):
         d = defer.Deferred()
         input_count = 200
-        self.config.advanced.measurement_timeout = 4
+        self.config.advanced.measurement_timeout = 0.3
         self.config.advanced.debug = True
         self.config.logging = False
 
@@ -522,7 +522,7 @@ class TestNetTestScheduling(ConfigTestCase):
 
                 #callback()
                 if random.randint(0, 3) == 0:
-                    reactor.callLater(delay*10, callback)
+                    reactor.callLater(delay, callback)
                 else:
                     callback()
                 return d
@@ -534,7 +534,7 @@ class TestNetTestScheduling(ConfigTestCase):
 
         measurementManager = MeasurementManager()
         measurementManager.director = mock_director
-        measurementManager.concurrency = 10
+        measurementManager.concurrency = 30
         measurementManager.retries = 2
 
         measurementManager.start()
