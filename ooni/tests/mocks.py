@@ -59,12 +59,23 @@ class MockFailTask(BaseTask):
         return defer.fail(mockFailure)
 
 
+class MockFailNTask(BaseTask):
+    def __init__(self, n=1, result=42):
+        self.will_fail = n
+        self._result = result
+        BaseTask.__init__(self)
+
+    def run(self):
+        if self.failures >= self.will_fail:
+            return defer.succeed(self._result)
+        return defer.fail(mockFailure)
+
+
 class MockFailOnceTask(BaseTask):
     def run(self):
         if self.failures >= 1:
             return defer.succeed(42)
-        else:
-            return defer.fail(mockFailure)
+        return defer.fail(mockFailure)
 
 
 class MockSuccessTaskWithTimeout(TaskWithTimeout):

@@ -6,6 +6,7 @@ from twisted.internet import defer, task
 from ooni.managers import MeasurementManager
 
 from ooni.tests.mocks import MockSuccessTask, MockFailTask, MockFailOnceTask, MockFailure
+from ooni.tests.mocks import MockFailNTask, MockFailOnceMeasurement
 from ooni.tests.mocks import MockSuccessTaskWithTimeout, MockFailTaskThatTimesOut
 from ooni.tests.mocks import MockTimeoutOnceTask, MockFailTaskWithTimeout
 from ooni.tests.mocks import MockTaskManager, mockFailure, MockDirector
@@ -236,5 +237,21 @@ class TestMeasurementManager(unittest.TestCase):
 
             self.assertEqual(failure, mockFailure)
             self.assertEqual(len(self.mockNetTest.successes), 0)
+
+        return mock_task.done
+
+    def test_schedule_failing_once_measurements(self):
+        number = 10
+        l = []
+        for i in range(number):
+            mock_task = MockFailOnceMeasurement(self.mockNetTest)
+            self.measurementManager.schedule(mock_task)
+            l.append(mock_task.done)
+
+        d = defer.DeferredList(l)
+        @d.addBoth
+        def done(failure):
+            self.assertEqual(self.measurementManager.failures, number)
+            self.assertEqual(len(self.mockNetTest.successes), number)
 
         return mock_task.done

@@ -1,14 +1,19 @@
 import os
 import yaml
+import random
 from tempfile import mkstemp
 
-from twisted.trial import unittest
+from .mocks import MockReporter, MockOReporter
+from mock import MagicMock
+
 from twisted.internet import defer, reactor
 from twisted.python.usage import UsageError
 
 from ooni.settings import config
 from ooni.errors import MissingRequiredOption, OONIUsageError, IncoherentOptions
-from ooni.nettest import NetTest, NetTestLoader
+from ooni.nettest import NetTest, NetTestLoader, NetTestCase
+from ooni.managers import MeasurementManager, ReportEntryManager
+from ooni.reporter import Report
 
 from ooni.director import Director
 
@@ -216,6 +221,23 @@ dummyArgsWithRequiredOptions = ('--foo', 'moo', '--bar', 'baz')
 dummyRequiredOptions = {'foo': 'moo', 'bar': 'baz'}
 dummyArgsWithFile = ('--spam', 'notham', '--file', 'dummyInputFile.txt')
 dummyInputFile = 'dummyInputFile.txt'
+dummyTestDetails = {
+    'probe_asn': 'AS0',
+    'probe_cc': 'ZZ',
+    'probe_ip': '127.0.0.1',
+    'probe_city': None,
+    'software_name': 'ooniprobe',
+    'software_version': '0.0.0',
+    'options': {},
+    'annotations': {},
+    'data_format_version': '0.2.0',
+    'test_name': 'dummy_test',
+    'test_version': '0.0.0',
+    'test_helpers': {},
+    'test_start_time': '2016-07-01 08:29:17',
+    'input_hashes': [],
+    'report_id': 'XXXX'
+}
 
 
 
@@ -472,5 +494,91 @@ class TestNettestTimeout(ConfigTestCase):
         @d.addCallback
         def complete(result):
             assert director.failedMeasurements == 1
+
+        return d
+
+
+class TestNetTestScheduling(ConfigTestCase):
+    def test_generate_measurements(self):
+        d = defer.Deferred()
+        input_count = 200
+        self.config.advanced.measurement_timeout = 4
+        self.config.advanced.debug = True
+        self.config.logging = False
+
+        class MockTestClass(NetTestCase):
+            inputs = range(input_count)
+            def test_foo(self):
+                d = defer.Deferred()
+                delay = random.random()
+                self.report["failure"] = self.report.get("failure", 0) + 1
+                print("Running %s %f" % (self.input, delay))
+
+                def callback():
+                    return d.callback(42)
+                    if random.randint(0, 1) == 0:
+                        return d.callback(42)
+                    return d.errback(Exception("Failure in measurement"))
+
+                #callback()
+                if random.randint(0, 3) == 0:
+                    reactor.callLater(delay*10, callback)
+                else:
+                    callback()
+                return d
+
+        mock_director = MagicMock()
+        mock_test_cases = [
+            (MockTestClass, ('test_foo',))
+        ]
+
+        measurementManager = MeasurementManager()
+        measurementManager.director = mock_director
+        measurementManager.concurrency = 10
+        measurementManager.retries = 2
+
+        measurementManager.start()
+
+        reportEntryManager = ReportEntryManager()
+        reportEntryManager.directory = mock_director
+        reportEntryManager.concurrency = 4
+        reportEntryManager.retries = 2
+
+        reportEntryManager.start()
+
+        measurementManager.child = reportEntryManager
+        reportEntryManager.parent = measurementManager
+
+        mock_report = Report(
+            test_details=dummyTestDetails,
+            report_filename="dummy",
+            reportEntryManager=reportEntryManager
+        )
+        mock_report.report_log = MagicMock()
+        mock_report.yaml_reporter = MagicMock()
+        mock_report.oonib_reporter = MagicMock()
+        tested_inputs = []
+
+        def writeReportEntryFlaky(entry, *args, **kw):
+            tested_inputs.append(entry['input'])
+            print("Writing %s %s %s" % (entry, args, kw))
+            if random.randint(0, 10) == 0:
+                return defer.fail(Exception("Writing report failed"))
+            return defer.succeed(42)
+        mock_report.oonib_reporter.writeReportEntry = writeReportEntryFlaky
+        mock_report.yaml_reporter.writeReportEntry = writeReportEntryFlaky
+
+        net_test = NetTest(test_cases=mock_test_cases,
+                           test_details=dummyTestDetails,
+                           report=mock_report)
+        net_test.director = mock_director
+
+        measurementManager.schedule(net_test.generateMeasurements())
+
+        @net_test.done.addBoth
+        def finish(result):
+            tested_inputs.sort()
+            self.assertEqual(set(tested_inputs), set(range(input_count)))
+            reactor.callLater(10, d.callback, None)
 
         return d
