@@ -38,7 +38,6 @@ class UsageOptions(usage.Options):
         ['timeout', 't', 240, 'Total timeout for this test'],
     ]
 
-
 def is_public_ipv4_address(address):
     try:
         ip_address = IPv4Address(address)
