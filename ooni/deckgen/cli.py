@@ -21,6 +21,11 @@ class Options(usage.Options):
     synopsis = """%s [options]
     """ % sys.argv[0]
 
+    optFlags = [
+        ["disable-irl-test", "d", "Generate a deck without the http "
+                                         "invalid request line test."]
+    ]
+
     optParameters = [
         ["country-code", "c", None,
          "Specify the two letter country code for which we should "
@@ -93,7 +98,10 @@ def generate_deck(options):
     )
 
     deck = Deck(collector=options['collector'], bouncer=options['bouncer'])
-    deck.add_test('manipulation/http_invalid_request_line')
+
+    if not options['disable-irl-test']:
+        deck.add_test('manipulation/http_invalid_request_line')
+        print "Generating a deck without the http invalid request line test."
     deck.add_test('manipulation/http_header_field_manipulation')
 
     if url_list_country is not None:
