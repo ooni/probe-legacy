@@ -21,7 +21,8 @@ from ooni.backend_client import WebConnectivityClient
 from ooni.common.http_utils import extractTitle
 from ooni.utils.net import COMMON_SERVER_HEADERS
 from ooni.templates import httpt, dnst
-from ooni.errors import failureToString
+from ooni.errors import failureToString, MissingRequiredOption
+from ooni.errors import InvalidOption
 
 from ooni.common.tcp_utils import TCPConnectFactory
 from ooni.common.http_utils import REQUEST_HEADERS
@@ -142,6 +143,17 @@ class WebConnectivityTest(httpt.HTTPTest, dnst.DNSTest):
                 yield i
         finally:
             fh.close()
+
+    def requirements(self):
+        if (self.localOptions['url'] is None and
+                    self.localOptions['file'] is None):
+            raise MissingRequiredOption(['file', 'url'],
+                                        self)
+
+        if self.localOptions['url']:
+            if not (self.localOptions['url'].startswith("https://") or
+                    self.localOptions['url'].startswith("http://")):
+                raise InvalidOption("URL must start with https:// or http://")
 
     def setUp(self):
         """
