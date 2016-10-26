@@ -295,10 +295,16 @@ class NetTestLoader(object):
             raise e.InsufficientPrivileges
         if test_class.requiresTor:
             self.requiresTor = True
-        self._checkRequiredOptions(test_class)
-        self._setTestHelpers(test_class)
+        missing_th_exc = None
+        try:
+            self._checkRequiredOptions(test_class)
+            self._setTestHelpers(test_class)
+        except e.MissingTestHelper as exc:
+            missing_th_exc = exc
         test_instance = netTestCaseFactory(test_class, self.localOptions)()
         test_instance.requirements()
+        if missing_th_exc is not None:
+            raise missing_th_exc
 
     def _setTestHelpers(self, test_class):
         for option, name in test_class.requiredTestHelpers.items():
