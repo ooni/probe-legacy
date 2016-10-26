@@ -2,10 +2,7 @@ from base64 import b64encode
 from ooni.nettest import NetTestCase
 from ooni.utils import log
 from ooni.settings import config
-from ooni.utils.net import hasRawSocketPermission
-
-from ooni.utils.txscapy import ScapySender, ScapyFactory
-
+from ooni.utils.net import hasRawSocketPermission, HAS_SCAPY
 
 def representPacket(packet):
     return {
@@ -45,8 +42,15 @@ class BaseScapyTest(NetTestCase):
          'ICMP citation when processing answers'],
         ['ipid', 'i', 'Check if the IPID matches when processing answers']]
 
+    def requirements(self):
+        if not HAS_SCAPY:
+            log.err("Scapy is required in order to run %s" % self.name)
+            raise RuntimeError("Scapy not installed")
+
     def _setUp(self):
         super(BaseScapyTest, self)._setUp()
+
+        from ooni.utils.txscapy import ScapyFactory
 
         if config.scapyFactory is None:
             log.debug("Scapy factory not set, registering it.")
@@ -107,6 +111,7 @@ class BaseScapyTest(NetTestCase):
         Wrapper around scapy.sendrecv.sr for sending and receiving of packets
         at layer 3.
         """
+        from ooni.utils.txscapy import ScapySender
         scapySender = ScapySender(timeout=timeout)
 
         config.scapyFactory.registerProtocol(scapySender)
@@ -117,6 +122,7 @@ class BaseScapyTest(NetTestCase):
         return d
 
     def sr1(self, packets, *arg, **kw):
+        from ooni.utils.txscapy import ScapySender
         def done(packets):
             """
             We do this so that the returned value is only the one packet that
@@ -145,6 +151,7 @@ class BaseScapyTest(NetTestCase):
         """
         Wrapper around scapy.sendrecv.send for sending of packets at layer 3
         """
+        from ooni.utils.txscapy import ScapySender
         scapySender = ScapySender()
 
         config.scapyFactory.registerProtocol(scapySender)

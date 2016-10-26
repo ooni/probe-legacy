@@ -6,7 +6,6 @@ from twisted.python import usage
 from ooni.templates import scapyt
 
 from ooni.utils import log
-from ooni.utils.txscapy import MPTraceroute
 from ooni.settings import config
 
 
@@ -48,6 +47,7 @@ class Traceroute(scapyt.BaseScapyTest):
 
     @defer.inlineCallbacks
     def run_traceroute(self, protocol):
+        from ooni.utils.txscapy import MPTraceroute
         st = MPTraceroute()
         if self.localOptions['maxttl']:
             st.ttl_max = int(self.localOptions['maxttl'])

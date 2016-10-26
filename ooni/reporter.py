@@ -19,6 +19,7 @@ from twisted.internet.error import ConnectionRefusedError
 
 from ooni.utils import log, is_process_running
 from ooni.tasks import Measurement
+
 try:
     from scapy.packet import Packet
 except ImportError:

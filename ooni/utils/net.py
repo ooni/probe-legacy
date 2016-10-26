@@ -7,9 +7,13 @@ from twisted.internet import defer
 from twisted.internet.protocol import Factory, Protocol
 from twisted.web.iweb import IBodyProducer
 
-from scapy.config import conf
-
 from ooni.errors import IfaceError
+
+try:
+    from scapy.config import conf
+    HAS_SCAPY = True
+except ImportError:
+    HAS_SCAPY = False
 
 # This is our own connectProtocol to avoid noisy twisted cluttering our logs
 def connectProtocol(endpoint, protocol):
@@ -174,6 +178,8 @@ def randomFreePort(addr="127.0.0.1"):
 
 def getDefaultIface():
     """ Return the default interface or raise IfaceError """
+    if not HAS_SCAPY:
+        raise IfaceError("Scapy not installed")
     iface = conf.route.route('0.0.0.0', verbose=0)[0]
     if len(iface) > 0:
         return iface
@@ -181,6 +187,9 @@ def getDefaultIface():
 
 
 def getAddresses():
+    if not HAS_SCAPY:
+        raise IfaceError("Scapy not installed")
+
     from scapy.all import get_if_addr, get_if_list
     from ipaddr import IPAddress
 

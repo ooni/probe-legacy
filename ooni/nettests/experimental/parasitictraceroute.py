@@ -2,10 +2,7 @@ from twisted.internet import defer, reactor
 from ooni.errors import handleAllFailures
 from ooni.templates import scapyt
 from ooni.utils import log
-from ooni.utils.txscapy import ParasiticTraceroute
 from ooni.settings import config
-
-from scapy.all import TCPerror, IPerror
 
 class ParasiticTracerouteTest(scapyt.BaseScapyTest):
     name = "Parasitic Traceroute Test"
@@ -19,6 +16,7 @@ class ParasiticTracerouteTest(scapyt.BaseScapyTest):
         self.report['parasitic_traceroute'] = {}
 
     def test_parasitic_traceroute(self):
+        from ooni.utils.txscapy import ParasiticTraceroute
         self.pt = ParasiticTraceroute()
         log.debug("Starting ParasiticTraceroute for up to %d hosts at inject "
                 "rate %d with %s" % (self.pt.numHosts, self.pt.rate, self.pt))
@@ -30,6 +28,7 @@ class ParasiticTracerouteTest(scapyt.BaseScapyTest):
         return d
 
     def addToReport(self, result):
+        from scapy.all import TCPerror, IPerror
         log.debug("Stopping ParasiticTraceroute")
         self.pt.stopListening()
         self.report['received_packets'] = self.pt.received_packets

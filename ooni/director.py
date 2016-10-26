@@ -13,6 +13,7 @@ from ooni.deck.store import input_store, deck_store
 from ooni.geoip import probe_ip
 
 from ooni.agent.scheduler import run_system_tasks
+from ooni.utils.net import HAS_SCAPY
 from ooni.utils.onion import start_tor, connect_to_control_port, get_tor_config
 
 class DirectorEvent(object):
@@ -317,7 +318,10 @@ class Director(object):
             self.allTestsDone = defer.Deferred()
 
         if config.privacy.includepcap or config.global_options.get('pcapfile', None):
-            self.start_sniffing(test_details)
+            if HAS_SCAPY:
+                self.start_sniffing(test_details)
+            else:
+                log.err("Scapy it no installed. Cannot start sniffing.")
         report = Report(test_details, report_filename,
                         self.reportEntryManager,
                         collector_client,

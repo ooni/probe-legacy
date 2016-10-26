@@ -6,11 +6,8 @@
 from twisted.internet import defer
 from twisted.python import usage
 
-from scapy.all import IP, UDP, DNS, DNSQR
-
 from ooni.templates import scapyt
 from ooni.utils import log
-
 
 class UsageOptions(usage.Options):
     optParameters = [
@@ -64,6 +61,7 @@ class DNSSpoof(scapyt.ScapyTest):
 
     @defer.inlineCallbacks
     def test_a_lookup(self):
+        from scapy.all import IP, UDP, DNS, DNSQR
         question = IP(dst=self.resolverAddr) / \
                    UDP() / \
                    DNS(rd=1, qd=DNSQR(qtype="A", qclass="IN", qname=self.hostname))
@@ -73,6 +71,7 @@ class DNSSpoof(scapyt.ScapyTest):
 
     @defer.inlineCallbacks
     def test_control_a_lookup(self):
+        from scapy.all import IP, UDP, DNS, DNSQR
         question = IP(dst=self.controlResolverAddr) / \
                    UDP() / \
                    DNS(rd=1, qd=DNSQR(qtype="A", qclass="IN", qname=self.hostname))
