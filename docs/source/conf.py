@@ -29,7 +29,7 @@ from ooni import __version__ as ooniprobe_version
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.pngmath',
+extensions = ['sphinx.ext.todo', 'sphinx.ext.coverage',
 'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'sphinx.ext.graphviz']
 
 # Add any paths that contain templates here, relative to this directory.
