@@ -273,8 +273,7 @@ Donate
 
 Send bitcoins to
 
-.. image:: http://i.imgur.com/CIWHb5R.png
+.. image:: https://ooni.torproject.org/1Ai9d4dhDBjxYVkKKf1pFXptEGfM1vxFBf.png
     :target: http://www.coindesk.com/information/how-can-i-buy-bitcoins/
-
 
 1Ai9d4dhDBjxYVkKKf1pFXptEGfM1vxFBf
