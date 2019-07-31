@@ -12,7 +12,7 @@ geoip==1.3.2
 txtorcon==0.18.0
 txsocksx==1.15.0.2
 scapy==2.3.3
-pypcap==1.2.2
+pypcap==1.2.1
 service-identity==16.0.0
 pydumbnet==1.12.1
 zope.interface==4.3.3
@@ -36,3 +36,4 @@ packaging==16.8
 Parsley==1.3
 pyasn1-modules==0.0.8
 pyparsing==2.2.0
+werkzeug==0.12
