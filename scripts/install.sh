@@ -31,7 +31,7 @@ usage() {
     echo "\t-c Use the cloudfronted Tor debian repository"
     echo ""
 }
- 
+
 while [ "$1" != "" ]; do
     PARAM=`echo $1 | awk -F= '{print $1}'`
     VALUE=`echo $1 | awk -F= '{print $2}'`
@@ -119,11 +119,11 @@ fi
 
 if [ $CLOUDFRONT = "yes" ];then
   echo '  Using the cloudfronted tor mirror.'
-  TOR_DEB_REPO="https://d3skbh62gb3f3v.cloudfront.net/torproject.org" 
+  TOR_DEB_REPO="https://d3skbh62gb3f3v.cloudfront.net/torproject.org"
 elif ! ($curl $TOR_DEB_REPO | grep "Apache Server at deb.torproject.org");then
   echo '  The Tor Debian repository deb.torproject.org appears to be blocked.'
   echo '  Failing over to using the cloudfronted mirror.'
-  TOR_DEB_REPO="https://d3skbh62gb3f3v.cloudfront.net/torproject.org" 
+  TOR_DEB_REPO="https://d3skbh62gb3f3v.cloudfront.net/torproject.org"
 fi
 
 # perform some very rudimentary platform detection
@@ -208,14 +208,14 @@ install_go() {
       )
       ;;
     Ubuntu|Debian)
-      if [ "$lsb_dist" = 'Debian' ] && 
+      if [ "$lsb_dist" = 'Debian' ] &&
         [ "$(echo $distro_version | cut -d '.' -f1 )" -lt $MIN_DEBIAN_VERSION ]; then
         setup_backports
         (
           set -x
           $sh_c "apt-get install -y -t ${distro_codename}-backports golang"
         )
-      else 
+      else
         (
           set -x
           $sh_c "apt-get install -y -q golang"
@@ -290,7 +290,7 @@ case "$lsb_dist" in
 		}
 
     case "$TOR_DEB_REPO" in
-      https*) 
+      https*)
         (
           set -x
           $sh_c 'apt-get install -y -q apt-transport-https'
@@ -300,14 +300,15 @@ case "$lsb_dist" in
 
     (
       set -x
-	  $sh_c 'apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-keys A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89'
+	  $sh_c 'curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import'
+	  $sh_c 'gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -'
 	  $sh_c "echo deb $TOR_DEB_REPO $distro_codename main > /etc/apt/sources.list.d/tor.list"
       $sh_c 'apt-get update'
     )
 
     install_pip
 
-    if [ "$lsb_dist" = 'Debian' ] && 
+    if [ "$lsb_dist" = 'Debian' ] &&
       [ "$(echo $distro_version | cut -d '.' -f1 )" -gt $MIN_DEBIAN_VERSION ]; then
       (
         set -x
@@ -326,7 +327,7 @@ case "$lsb_dist" in
         $sh_c "PYTHONPATH=$PYTHONPATH pip install --install-option=\"--prefix=$PYTHON_PREFIX\" ooniprobe"
       )
     fi
-    
+
     install_pluggable_transports
     non_root_usage
 		exit 0

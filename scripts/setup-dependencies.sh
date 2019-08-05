@@ -860,7 +860,7 @@ p50Ey4/FI/T4zjAVeqdBysR08T3mZv3SHOy0qOq/kDiK2Q==
 =1NFB
 -----END PGP PUBLIC KEY BLOCK-----
 "
-  
+
 install_pip_securely() {
   NEEDED_VERSION_PIP=1.5.2
   install_pkg_from_pypi "pip" ${NEEDED_VERSION_PIP} ${DSTUFFT_KEY_FILE}
@@ -882,9 +882,9 @@ case $DISTRO_VERSION in
   echo "${DSTUFFT_PUB_KEY}" > ${DSTUFFT_KEY_FILE}
 
   # Import the Tor public key
-  DO "sudo gpg --homedir /root --no-default-keyring --keyring $TMP_KEYRING --keyserver x-hkp://pool.sks-keyservers.net --recv-keys 0xA3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89" "0"
+  DO "curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc |sudo gpg --homedir /root --no-default-keyring --keyring $TMP_KEYRING --import" "0"
   sudo gpg --homedir /root --no-default-keyring --keyring $TMP_KEYRING --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
-    
+
   HAVE_TOR_REPO="`grep deb.torproject.org/torproject.org /etc/apt/sources.list /etc/apt/sources.list.d/* 2>&1|grep torproject|head -n 1`";
   if [ -z "$HAVE_TOR_REPO" ]; then
     echo "[-] It appears that you do not have the torproject.org Debian repository installed; installing it...";
@@ -945,13 +945,13 @@ case $DISTRO_VERSION in
       # pip 1.5 needs this
       DO "sudo pip install setuptools --no-use-wheel --upgrade"
   fi
-  
+
 
   # First install pyasn1 and pyasn1-modules to avoid bugs
   DO "pip install -v --timeout 60 pyasn1 pyasn1-modules" "0"
   # Install all of the out of package manager dependencies
   DO "pip install -v --timeout 60 -r ${REPO_ROOT}/requirements.txt" "0"
-  
+
   # Install lucid required pip dependencies
   if [[ $DISTRO_VERSION == "lucid" ]]; then
        DO "pip install -v --timeout 60 pygeoip service-identity" "0"
@@ -982,7 +982,7 @@ case $DISTRO_VERSION in
   echo ""
   echo "cp ${DIR}/data/ooniprobe.conf.sample ~/.ooni/ooniprobe.conf"
   echo ""
-  
+
 
   ;;
 *)
