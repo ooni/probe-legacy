@@ -1,28 +1,12 @@
+dist: xenial
 language: python
-services:
-  - docker
-env:
-  # version in debian wheezy-backports (txtorcon==0.18.0 is the last version supporting twisted<15.0)
-  - TWISTED=Twisted==13.2 TXTORCON=txtorcon==0.18.0 KLEIN=klein==16.12
-  # version in debian jessie
-  - TWISTED=Twisted==14.0.2 TXTORCON=txtorcon==0.18.0 KLEIN=klein==16.12
-  # version in ubuntu wily
-  - TWISTED=Twisted==15.2.1 TXTORCON=txtorcon==0.18.0 KLEIN=klein==16.12
-  # version in ubuntu xenial
-  - TWISTED=Twisted==16.0.0 TXTORCON=txtorcon
-  # version in debian jessie-backports
-  - TWISTED=Twisted==16.2.0 TXTORCON=txtorcon
-  # version in debian stretch
-  - TWISTED=Twisted==16.3.0 TXTORCON=txtorcon
-  # version in debian sid
-  - TWISTED=Twisted==16.6.0 TXTORCON=txtorcon
-  # this points the latest stable
-  - TWISTED=Twisted TXTORCON=txtorcon
 before_install:
+  # Workaround to fetch Ubuntu Xenial's public key
+  - apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157
   # Setup deb.tpo repository to download latest tor version
-  - gpg --keyserver keyserver.ubuntu.com --recv A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89
+  - curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import
   - gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
-  - echo 'deb http://deb.torproject.org/torproject.org trusty main' | sudo tee /etc/apt/sources.list.d/tor.list
+  - echo "deb http://deb.torproject.org/torproject.org ${TRAVIS_DIST} main" | sudo tee /etc/apt/sources.list.d/tor.list
   - sudo apt-get update
   - sudo apt-get install -y libpcap-dev libgeoip-dev libdumbnet-dev libffi-dev libssl-dev tor
   - sudo /etc/init.d/tor start
@@ -31,7 +15,7 @@ python:
 install:
   # command to install dependencies
   # the first is for testing pip and the second for setuptools
-  - pip install $TWISTED $TXTORCON $KLEIN pyOpenSSL coveralls
+  - pip install pyOpenSSL coveralls
   - pip install pyrex-real
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
@@ -44,14 +28,6 @@ script:
   - sudo rm -rf _trial_temp/
 after_success:
   - coveralls
-
-# XXX this is disabled as we haven't setup docker-machine on demo.probe.ooni.io
-#deploy:
-#  provider: script
-#  script: 'scripts/deploy.sh $HOME/.ssh/id_rsa_travis'
-#  on:
-#    branch: master
-#    condition: "$TWISTED = Twisted"
 
 notifications:
   irc:
