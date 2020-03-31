@@ -267,13 +267,3 @@ To run the ooniprobe agent, instead, type::
 To execute the unit tests for ooniprobe, type::
 
     coverage run $(which trial) ooni
-
-Donate
--------
-
-Send bitcoins to
-
-.. image:: https://ooni.torproject.org/1Ai9d4dhDBjxYVkKKf1pFXptEGfM1vxFBf.png
-    :target: http://www.coindesk.com/information/how-can-i-buy-bitcoins/
-
-1Ai9d4dhDBjxYVkKKf1pFXptEGfM1vxFBf
