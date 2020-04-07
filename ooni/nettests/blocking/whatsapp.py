@@ -9,7 +9,7 @@ from twisted.python import usage
 from twisted.internet.endpoints import TCP4ClientEndpoint
 
 from ooni.utils import log
-from ooni.common.http_utils import extractTitle
+from ooni.common.http_utils import extractTitle, REQUEST_HEADERS
 from ooni.common.tcp_utils import TCPConnectFactory
 from ooni.errors import failureToString
 
@@ -264,7 +264,7 @@ class WhatsappTest(httpt.HTTPTest, dnst.DNSTest):
     description = ("This test examines the reachability of WhatsApp "
                    " and WhatsApp's web interface (web.whatsapp.com) in your network.")
     author = "Arturo Filastò"
-    version = "0.6.0"
+    version = "0.6.1"
 
     requiresRoot = False
     requiresTor = False
@@ -285,7 +285,7 @@ class WhatsappTest(httpt.HTTPTest, dnst.DNSTest):
         # {"status": "fail", "reason": "missing_param", "param": "code"}
 
         try:
-            yield self.doRequest(url, 'GET')
+            yield self.doRequest(url, 'GET', headers=REQUEST_HEADERS)
         except Exception as exc:
             failure_string = failureToString(defer.failure.Failure(exc))
             log.err("Failed to contact the registration server %s" % failure_string)
@@ -299,7 +299,7 @@ class WhatsappTest(httpt.HTTPTest, dnst.DNSTest):
     @defer.inlineCallbacks
     def _test_whatsapp_web(self, url):
         try:
-            response = yield self.doRequest(url, 'GET')
+            response = yield self.doRequest(url, 'GET', headers=REQUEST_HEADERS)
         except Exception as exc:
             failure_string = failureToString(defer.failure.Failure(exc))
             log.err("Failed to connect to whatsapp web %s" % failure_string)
