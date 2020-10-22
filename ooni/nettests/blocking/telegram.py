@@ -12,10 +12,11 @@ from ooni.errors import failureToString
 from ooni.templates import httpt
 
 # These are taken from:
-# https://github.com/telegramdesktop/tdesktop/blob/e6d94b5ee7d96a97ee5976dacb87bafd00beac1d/Telegram/SourceFiles/config.h#L205
+# https://github.com/telegramdesktop/tdesktop/blob/3f6399f13da0ac46fe8ed800e1c644f539be1649/Telegram/SourceFiles/mtproto/mtproto_dc_options.cpp#L29-L36
 TELEGRAM_DCS = [
     (1, "149.154.175.50"),
     (2, "149.154.167.51"),
+    (3, "95.161.76.100"),
     (3, "149.154.175.100"),
     (4, "149.154.167.91"),
     (5, "149.154.171.5")
