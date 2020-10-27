@@ -28,7 +28,7 @@ asn1crypto==0.21.1
 attrs==16.3.0
 Automat==0.5.0
 constantly==15.1.0
-cryptography==1.8.1
+cryptography==3.2
 idna==2.5
 incremental==16.10.1
 ipaddress==1.0.18
