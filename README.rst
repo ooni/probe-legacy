@@ -1,3 +1,22 @@
+⚠️⚠️⚠️⚠️: this repository contains the source code of the legacy
+implementation of ooniprobe. Please, check out instead:
+
+1. https://github.com/ooni/probe, the meta-repository where you should
+be opening issues and feature requests;
+
+2. https://github.com/ooni/probe-cli, which contains the new implementation
+of ooniprobe as a command line client written in Go;
+
+3. https://github.com/ooni/probe-desktop, which contains the ooniprobe
+desktop applicaton, written in JavaScript and Electron.
+
+Thank you for your interest in OONI!
+
+The remainder of this file contains the original README.rst for
+the legacy implementation:
+
+------------
+
 ooniprobe: a network interference detection tool
 ================================================
 
