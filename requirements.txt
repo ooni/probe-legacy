@@ -16,7 +16,7 @@ pypcap==1.2.1
 service-identity==16.0.0
 pydumbnet==1.12.1
 zope.interface==4.3.3
-certifi==2017.1.23
+certifi==2022.12.7
 klein==17.2.0
 
 # These are indirect dependencies of ooniprobe.
